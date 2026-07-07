@@ -7,6 +7,8 @@ public class FPS : ModuleRules
 	public FPS(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
+		
+		PublicIncludePaths.Add("FPS");
 	
 		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore" });
 
