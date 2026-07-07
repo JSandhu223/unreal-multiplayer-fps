@@ -5,6 +5,9 @@
 #include "ShooterCharacter.generated.h"
 
 
+class USpringArmComponent;
+class UCameraComponent;
+
 UCLASS()
 class FPS_API AShooterCharacter : public ACharacter
 {
@@ -12,12 +15,22 @@ class FPS_API AShooterCharacter : public ACharacter
 
 public:
 	AShooterCharacter();
-
-protected:
-	virtual void BeginPlay() override;
-
-public:	
+	
 	virtual void Tick(float DeltaTime) override;
 	
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+protected:
+	virtual void BeginPlay() override;
+	
+private:
+	// First person arms
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<USkeletalMeshComponent> Mesh1P;
+	
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<USpringArmComponent> SpringArm;
+	
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<UCameraComponent> FirstPersonCamera;
 };
