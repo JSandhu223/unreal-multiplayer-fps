@@ -17,12 +17,9 @@ public:
 	
 	// Cycle to the next weapon in inventory
 	void Initiate_CycleWeapon();
-	
+	void Initiate_ReloadWeapon();
 	void Initiate_FireWeapon_Pressed();
 	void Initiate_FireWeapon_Released();
-	
-	void Initiate_ReloadWeapon();
-	
 	void Initiate_Aim_Pressed();
 	void Initiate_Aim_Released();
 

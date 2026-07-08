@@ -5,6 +5,7 @@
 #include "ShooterCharacter.generated.h"
 
 
+class UInputAction;
 class UCombatComponent;
 class USpringArmComponent;
 class UCameraComponent;
@@ -37,4 +38,23 @@ private:
 	
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UCameraComponent> FirstPersonCamera;
+	
+	UPROPERTY(EditDefaultsOnly, Category="FPS|Input")
+	TObjectPtr<UInputAction> CycleWeaponAction;
+	
+	UPROPERTY(EditDefaultsOnly, Category="FPS|Input")
+	TObjectPtr<UInputAction> ReloadWeaponAction;
+	
+	UPROPERTY(EditDefaultsOnly, Category="FPS|Input")
+	TObjectPtr<UInputAction> FireWeaponAction;
+	
+	UPROPERTY(EditDefaultsOnly, Category="FPS|Input")
+	TObjectPtr<UInputAction> AimWeaponAction;
+	
+	void Input_CycleWeapon();
+	void Input_ReloadWeapon();
+	void Input_FireWeapon_Pressed();
+	void Input_FireWeapon_Released();
+	void Input_AimWeapon_Pressed();
+	void Input_AimWeapon_Released();
 };
