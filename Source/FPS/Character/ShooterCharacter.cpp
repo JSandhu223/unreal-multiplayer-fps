@@ -1,6 +1,7 @@
 #include "ShooterCharacter.h"
 
 #include "Camera/CameraComponent.h"
+#include "Combat/CombatComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -12,6 +13,9 @@ AShooterCharacter::AShooterCharacter()
 	
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
 	// GetCharacterMovement()->MovementState.bCanCrouch = true;
+	
+	Combat = CreateDefaultSubobject<UCombatComponent>(TEXT("Combat"));
+	Combat->SetIsReplicated(true);
 	
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
 	SpringArm->SetupAttachment(RootComponent);
