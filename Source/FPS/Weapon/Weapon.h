@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GameplayTagContainer.h"
 #include "GameFramework/Actor.h"
 #include "Weapon.generated.h"
 
@@ -19,6 +20,9 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
+	
+	UPROPERTY(EditDefaultsOnly, Category="FPS|Weapon Type")
+	FGameplayTag WeaponType;
 	
 private:
 	// Weapon Mesh: first person view
