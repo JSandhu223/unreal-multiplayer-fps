@@ -5,12 +5,20 @@
 #include "Engine/Engine.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/Pawn.h"
+#include "Net/UnrealNetwork.h"
 #include "Weapon/Weapon.h"
 
 
 UCombatComponent::UCombatComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
+}
+
+void UCombatComponent::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	
+	DOREPLIFETIME(ThisClass, Inventory);
 }
 
 void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -50,10 +58,18 @@ void UCombatComponent::Initiate_Aim_Released()
 
 void UCombatComponent::SpawnInventory()
 {
-	AWeapon* NewWeapon = SpawnWeapon(DefaultWeaponClass);
-	if (IsValid(NewWeapon))
+	if (GetOwner()->GetLocalRole() < ROLE_Authority) { return; }
+
+	for (TSubclassOf<AWeapon>& WeaponClass : DefaultWeaponClasses)
 	{
-		NewWeapon->AttachToOwningPawn();
+		AWeapon* Weapon = SpawnWeapon(WeaponClass);
+		Inventory.AddUnique(Weapon);
+	}
+	
+	// For now, we just attach the first weapon in our inventory to the owner
+	if (Inventory.Num() > 0)
+	{
+		Inventory[0]->AttachToOwningPawn();
 	}
 }
 
