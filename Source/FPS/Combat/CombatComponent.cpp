@@ -1,6 +1,9 @@
 #include "CombatComponent.h"
 
+#include "Character/ShooterCharacter.h"
+#include "Components/SkeletalMeshComponent.h"
 #include "Engine/Engine.h"
+#include "GameFramework/Character.h"
 #include "GameFramework/Pawn.h"
 #include "Weapon/Weapon.h"
 
@@ -48,6 +51,10 @@ void UCombatComponent::Initiate_Aim_Released()
 void UCombatComponent::SpawnInventory()
 {
 	AWeapon* NewWeapon = SpawnWeapon(DefaultWeaponClass);
+	if (IsValid(NewWeapon))
+	{
+		NewWeapon->AttachToOwningPawn();
+	}
 }
 
 void UCombatComponent::DestroyInventory()
