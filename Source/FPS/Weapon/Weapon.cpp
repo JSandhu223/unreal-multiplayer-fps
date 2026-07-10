@@ -14,14 +14,14 @@ AWeapon::AWeapon()
 	Mesh1P->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::OnlyTickPoseWhenRendered;
 	Mesh1P->bReceivesDecals = false;
 	Mesh1P->CastShadow = 0;
-	Mesh1P->SetHiddenInGame(true);
+	//Mesh1P->SetHiddenInGame(true);
 	SetRootComponent(Mesh1P);
 	
 	Mesh3P = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Mesh3P"));
 	Mesh3P->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::OnlyTickPoseWhenRendered;
 	Mesh3P->bReceivesDecals = false;
 	Mesh3P->CastShadow = 1;
-	Mesh3P->SetHiddenInGame(true);
+	//Mesh3P->SetHiddenInGame(true);
 	Mesh3P->SetupAttachment(Mesh1P);
 }
 
