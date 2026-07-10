@@ -1,5 +1,3 @@
-
-
 #include "FPS.h"
 #include "Modules/ModuleManager.h"
 
