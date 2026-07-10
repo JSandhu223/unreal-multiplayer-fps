@@ -19,6 +19,7 @@ void UCombatComponent::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	
 	DOREPLIFETIME(ThisClass, Inventory);
+	DOREPLIFETIME(ThisClass, CurrentWeapon);
 }
 
 void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -56,8 +57,17 @@ void UCombatComponent::Initiate_Aim_Released()
 	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Cyan, TEXT("Initiate_Aim_Released"), false);
 }
 
+void UCombatComponent::Equip(AWeapon* Weapon)
+{
+	// Setting CurrentWeapon causes it to replicate and trigger the rep notify on the client(s)
+	CurrentWeapon = Weapon;
+	
+	CurrentWeapon->AttachToOwningPawn();
+}
+
 void UCombatComponent::SpawnInventory()
 {
+	// Ensure only the server runs the code for spawning the inventory
 	if (GetOwner()->GetLocalRole() < ROLE_Authority) { return; }
 
 	for (TSubclassOf<AWeapon>& WeaponClass : DefaultWeaponClasses)
@@ -69,13 +79,26 @@ void UCombatComponent::SpawnInventory()
 	// For now, we just attach the first weapon in our inventory to the owner
 	if (Inventory.Num() > 0)
 	{
-		Inventory[0]->AttachToOwningPawn();
+		Equip(Inventory[0]);
 	}
 }
 
 void UCombatComponent::DestroyInventory()
 {
+	for (AWeapon* Weapon : Inventory)
+	{
+		if (IsValid(Weapon))
+		{
+			Weapon->Destroy();
+		}
+	}
+}
+
+void UCombatComponent::OnRep_CurrentWeapon(AWeapon* LastWeapon)
+{
+	if (!IsValid(CurrentWeapon)) { return; }
 	
+	CurrentWeapon->AttachToOwningPawn();
 }
 
 AWeapon* UCombatComponent::SpawnWeapon(TSubclassOf<AWeapon> WeaponClass) const

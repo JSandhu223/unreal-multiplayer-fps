@@ -19,6 +19,10 @@ class FPS_API AShooterCharacter : public ACharacter, public IPlayerInterface
 public:
 	AShooterCharacter();
 	
+	virtual void BeginPlay() override;
+	
+	virtual void BeginDestroy() override;
+	
 	virtual void Tick(float DeltaTime) override;
 	
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
@@ -34,9 +38,6 @@ public:
 	virtual USkeletalMeshComponent* GetMesh3P_Implementation() const override;
 	
 	/** ~PlayerInterface */
-
-protected:
-	virtual void BeginPlay() override;
 	
 private:
 	UPROPERTY(VisibleAnywhere)

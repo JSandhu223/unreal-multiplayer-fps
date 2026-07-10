@@ -31,10 +31,20 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category="FPS|Weapon")
 	TObjectPtr<UWeaponData> WeaponData;
 	
+	// Called only on the server
+	void Equip(AWeapon* Weapon);
+	
 	void SpawnInventory();
 	void DestroyInventory();
 
 private:
+	UPROPERTY(Transient, ReplicatedUsing=OnRep_CurrentWeapon)
+	TObjectPtr<AWeapon> CurrentWeapon;
+	
+	// Called when CurrentWeapon replicates to clients
+	UFUNCTION()
+	void OnRep_CurrentWeapon(AWeapon* LastWeapon);
+	
 	UPROPERTY(Transient, Replicated)
 	TArray<AWeapon*> Inventory;
 	

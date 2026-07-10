@@ -52,6 +52,16 @@ void AShooterCharacter::BeginPlay()
 	Super::BeginPlay();
 }
 
+void AShooterCharacter::BeginDestroy()
+{
+	Super::BeginDestroy();
+	
+	if (IsValid(Combat))
+	{
+		Combat->DestroyInventory();
+	}
+}
+
 void AShooterCharacter::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
