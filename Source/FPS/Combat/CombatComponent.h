@@ -36,6 +36,9 @@ public:
 	
 	void SpawnInventory();
 	void DestroyInventory();
+	
+	UPROPERTY(BlueprintReadOnly, Replicated)
+	bool bAiming;
 
 protected:
 	UPROPERTY(Transient, BlueprintReadOnly, ReplicatedUsing=OnRep_CurrentWeapon)
@@ -53,4 +56,10 @@ private:
 	TArray<TSubclassOf<AWeapon>> DefaultWeaponClasses;
 	
 	AWeapon* SpawnWeapon(TSubclassOf<AWeapon> WeaponClass) const;
+	
+	// Server RPC for letting server and other clients know when a client is aiming their weapon
+	UFUNCTION(Server, Reliable)
+	void Server_Aim(bool bPressed);
+	
+	void Local_Aim(bool bPressed);
 };
