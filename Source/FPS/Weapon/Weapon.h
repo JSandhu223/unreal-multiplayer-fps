@@ -23,12 +23,12 @@ public:
 	USkeletalMeshComponent* GetMesh3P() const;
 	
 	void AttachToOwningPawn() const;
-
-protected:
-	virtual void BeginPlay() override;
 	
 	UPROPERTY(EditDefaultsOnly, Category="FPS|Weapon Type")
 	FGameplayTag WeaponType;
+
+protected:
+	virtual void BeginPlay() override;
 	
 private:
 	// Weapon Mesh: first person view
