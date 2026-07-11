@@ -39,10 +39,11 @@ public:
 	
 	/** ~PlayerInterface */
 	
-private:
-	UPROPERTY(VisibleAnywhere)
+protected:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="FPS|Combat")
 	TObjectPtr<UCombatComponent> Combat;
 	
+private:
 	// First person arms
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<USkeletalMeshComponent> Mesh1P;

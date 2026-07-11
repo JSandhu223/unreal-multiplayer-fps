@@ -28,7 +28,7 @@ public:
 	void Initiate_Aim_Pressed();
 	void Initiate_Aim_Released();
 	
-	UPROPERTY(EditDefaultsOnly, Category="FPS|Weapon")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="FPS|Weapon")
 	TObjectPtr<UWeaponData> WeaponData;
 	
 	// Called only on the server
@@ -37,10 +37,11 @@ public:
 	void SpawnInventory();
 	void DestroyInventory();
 
-private:
-	UPROPERTY(Transient, ReplicatedUsing=OnRep_CurrentWeapon)
+protected:
+	UPROPERTY(Transient, BlueprintReadOnly, ReplicatedUsing=OnRep_CurrentWeapon)
 	TObjectPtr<AWeapon> CurrentWeapon;
 	
+private:
 	// Called when CurrentWeapon replicates to clients
 	UFUNCTION()
 	void OnRep_CurrentWeapon(AWeapon* LastWeapon);

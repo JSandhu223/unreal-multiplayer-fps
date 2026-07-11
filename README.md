@@ -36,8 +36,8 @@ Developed with Unreal Engine 5.8
 - A data asset that holds all data related to weapons
 - Contains the following data:
 
-    - A TMap that maps a WeaponType gameplay tag to an FName
-    - More to come ...
+    - A `TMap` field that maps a WeaponType gameplay tag to an FName
+    - Two `TMap` fields that maps a WeaponType to an FPlayerAnims struct, which holds animation data such as animation sequences and blendspaces. The first TMap corresponds to first person animations and the second TMap corresponds to third person animations.
 
 ### PlayerInterface
 
