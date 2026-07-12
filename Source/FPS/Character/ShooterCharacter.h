@@ -40,10 +40,6 @@ public:
 	/** ~PlayerInterface */
 	
 protected:
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="FPS|Combat")
-	TObjectPtr<UCombatComponent> Combat;
-	
-private:
 	// First person arms
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<USkeletalMeshComponent> Mesh1P;
@@ -51,9 +47,19 @@ private:
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<USpringArmComponent> SpringArm;
 	
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="FPS|Camera")
 	TObjectPtr<UCameraComponent> FirstPersonCamera;
 	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="FPS|Aiming")
+	float DefaultFieldOfView;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="FPS|Combat")
+	TObjectPtr<UCombatComponent> Combat;
+	
+	UFUNCTION(BlueprintImplementableEvent)
+	void OnAim(bool bIsAiming);
+	
+private:
 	UPROPERTY(EditDefaultsOnly, Category="FPS|Input")
 	TObjectPtr<UInputAction> CycleWeaponAction;
 	

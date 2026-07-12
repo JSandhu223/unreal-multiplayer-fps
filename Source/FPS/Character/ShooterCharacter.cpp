@@ -30,6 +30,9 @@ AShooterCharacter::AShooterCharacter()
 	FirstPersonCamera->SetupAttachment(SpringArm);
 	FirstPersonCamera->bUsePawnControlRotation = false;
 	
+	// Note: the camera's field of view is 90.0f by default
+	DefaultFieldOfView = 90.0f;
+	
 	Mesh1P = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Mesh1P"));
 	Mesh1P->SetupAttachment(FirstPersonCamera);
 	Mesh1P->bOnlyOwnerSee = true;
@@ -50,6 +53,8 @@ AShooterCharacter::AShooterCharacter()
 void AShooterCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+	
+	FirstPersonCamera->SetFieldOfView(DefaultFieldOfView);
 }
 
 void AShooterCharacter::BeginDestroy()
@@ -130,9 +135,11 @@ void AShooterCharacter::Input_FireWeapon_Released()
 void AShooterCharacter::Input_AimWeapon_Pressed()
 {
 	Combat->Initiate_Aim_Pressed();
+	OnAim(true);
 }
 
 void AShooterCharacter::Input_AimWeapon_Released()
 {
 	Combat->Initiate_Aim_Released();
+	OnAim(false);
 }
