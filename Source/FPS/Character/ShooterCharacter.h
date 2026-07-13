@@ -39,6 +39,9 @@ public:
 	
 	/** ~PlayerInterface */
 	
+	UFUNCTION(BlueprintCallable)
+	FRotator GetFixedAimRotation() const;
+	
 protected:
 	// First person arms
 	UPROPERTY(VisibleAnywhere)

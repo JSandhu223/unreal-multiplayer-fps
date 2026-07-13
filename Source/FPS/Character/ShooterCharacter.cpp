@@ -98,6 +98,22 @@ USkeletalMeshComponent* AShooterCharacter::GetMesh3P_Implementation() const
 	return GetMesh();
 }
 
+FRotator AShooterCharacter::GetFixedAimRotation() const
+{
+	FRotator AimRotation = GetBaseAimRotation();
+	
+	if (AimRotation.Pitch > 90.0f && !IsLocallyControlled())
+	{
+		// Map the pitch from [270, 360) to [-90, 0]
+		FVector2D InRange(270.0f, 360.0f);
+		FVector2D OutRange(-90.0f, 0);
+		
+		AimRotation.Pitch = FMath::GetMappedRangeValueClamped(InRange, OutRange, AimRotation.Pitch);
+	}
+	
+	return AimRotation
+}
+
 void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
