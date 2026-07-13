@@ -45,6 +45,10 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category="FPS|FABRIK")
 	FTransform FABRIK_SocketTransform;
 	
+	// Used to fix the arm warping around the model in the animation blueprint preview
+	UFUNCTION(BlueprintCallable)
+	bool HasCurrentWeapon() const;
+	
 protected:
 	// First person arms
 	UPROPERTY(VisibleAnywhere)
@@ -67,6 +71,8 @@ protected:
 	
 private:
 	void CalculateFABRIKSocketTransform();
+	
+	void CalculateTurnInPlaceParameters();
 	
 	UPROPERTY(EditDefaultsOnly, Category="FPS|Input")
 	TObjectPtr<UInputAction> CycleWeaponAction;
