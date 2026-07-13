@@ -7,6 +7,7 @@
 #include "Data/WeaponData.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Weapon/Weapon.h"
 
 
 AShooterCharacter::AShooterCharacter()
@@ -79,6 +80,31 @@ void AShooterCharacter::PossessedBy(AController* NewController)
 void AShooterCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	
+	CalculateFABRIKSocketTransform();
+}
+
+void AShooterCharacter::CalculateFABRIKSocketTransform()
+{
+	if (IsValid(Combat) && IsValid(Combat->CurrentWeapon) && IsValid(Combat->CurrentWeapon->GetMesh3P()))
+	{
+		// Get the socket named "FABRIK_Socket" from the equipped weapon.
+		// Note: every weapon skeletal mesh will have this socket. If using your own meshes, be sure to add socket with this name on the skeletal mesh.
+		FABRIK_SocketTransform = Combat->CurrentWeapon->GetMesh3P()->GetSocketTransform("FABRIK_Socket", ERelativeTransformSpace::RTS_World);
+		
+		// Convert the FABRIK_Socket transform into "hand_r" bone space
+		FVector OutLocation;
+		FRotator OutRotation;
+		GetMesh()->TransformToBoneSpace(
+			FName("hand_r"),
+			FABRIK_SocketTransform.GetLocation(),
+			FABRIK_SocketTransform.GetRotation().Rotator(),
+			OutLocation,
+			OutRotation
+		);
+		FABRIK_SocketTransform.SetLocation(OutLocation);
+		FABRIK_SocketTransform.SetRotation(OutRotation.Quaternion());
+	}
 }
 
 FName AShooterCharacter::GetWeaponAttachPoint_Implementation(const FGameplayTag& WeaponType) const
@@ -111,7 +137,7 @@ FRotator AShooterCharacter::GetFixedAimRotation() const
 		AimRotation.Pitch = FMath::GetMappedRangeValueClamped(InRange, OutRange, AimRotation.Pitch);
 	}
 	
-	return AimRotation
+	return AimRotation;
 }
 
 void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)

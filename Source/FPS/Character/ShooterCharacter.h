@@ -42,6 +42,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	FRotator GetFixedAimRotation() const;
 	
+	UPROPERTY(BlueprintReadOnly, Category="FPS|FABRIK")
+	FTransform FABRIK_SocketTransform;
+	
 protected:
 	// First person arms
 	UPROPERTY(VisibleAnywhere)
@@ -63,6 +66,8 @@ protected:
 	void OnAim(bool bIsAiming);
 	
 private:
+	void CalculateFABRIKSocketTransform();
+	
 	UPROPERTY(EditDefaultsOnly, Category="FPS|Input")
 	TObjectPtr<UInputAction> CycleWeaponAction;
 	
