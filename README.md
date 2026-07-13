@@ -13,7 +13,7 @@ Developed with Unreal Engine 5.8
 
 - Has a `CombatComponent`.
 - Handles input actions related to weapons (i.e. firing, aiming, reloading, switching), calling functions on the `CombatComponent`.
-- Contains a first person arms mesh `Mesh1P` and full body mesh `Mesh3P`.
+- Contains a first person arms mesh `Mesh1P` and full body mesh (default character mesh).
 - Spawns the player inventory on call to `PossessedBy()`.
 - Implements the `PlayerInterface`.
 
@@ -35,7 +35,6 @@ Developed with Unreal Engine 5.8
 
 - A data asset that holds all data related to weapons.
 - Contains the following data:
-
     - A `TMap` field that maps a WeaponType gameplay tag to an FName.
     - Two `TMap` fields that maps a WeaponType to an FPlayerAnims struct, which holds animation data such as animation sequences and blendspaces. The first TMap corresponds to first person animations and the second TMap corresponds to third person animations.
 
