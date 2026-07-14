@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Interfaces/PlayerInterface.h"
+#include "ShooterTypes/ShooterTypes.h"
 #include "ShooterCharacter.generated.h"
 
 
@@ -29,16 +30,14 @@ public:
 	
 	virtual void PossessedBy(AController* NewController) override;
 	
-	/** PlayerInterface */
-	
+	/** PlayerInterface*/
 	virtual FName GetWeaponAttachPoint_Implementation(const FGameplayTag& WeaponType) const override;
 	
 	virtual USkeletalMeshComponent* GetMesh1P_Implementation() const override;
 	
 	virtual USkeletalMeshComponent* GetMesh3P_Implementation() const override;
 	
-	/** ~PlayerInterface */
-	
+	// Fixes the pitch by mapping the range [270, 360] to [-90, 0].
 	UFUNCTION(BlueprintCallable)
 	FRotator GetFixedAimRotation() const;
 	
@@ -68,12 +67,31 @@ protected:
 	
 	UFUNCTION(BlueprintImplementableEvent)
 	void OnAim(bool bIsAiming);
+
 	
 private:
 	void CalculateFABRIKSocketTransform();
 	
-	void CalculateTurnInPlaceParameters();
+	void CalculateTurnInPlaceParameters(float DeltaTime);
 	
+	void TurnInPlace(float DeltaTime);
+	
+protected:
+	FRotator StartingAimRotation;
+	
+	float InterpAO_Yaw = 0.0f;
+	
+	// This is the yaw of the DeltaRotation
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category="FPS|Turn in Place")
+	float AO_Yaw = 0.0f;
+	
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category="FPS|Turn in Place")
+	ETurningInPlace TurningStatus;
+	
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category="FPS|Strafing")
+	float MovementOffsetYaw;
+	
+private:
 	UPROPERTY(EditDefaultsOnly, Category="FPS|Input")
 	TObjectPtr<UInputAction> CycleWeaponAction;
 	

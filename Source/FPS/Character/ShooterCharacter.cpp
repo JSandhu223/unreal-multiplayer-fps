@@ -7,7 +7,16 @@
 #include "Data/WeaponData.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "Weapon/Weapon.h"
+
+
+TAutoConsoleVariable<bool> CVarTurnInPlaceDebugDrawing(
+	TEXT("game.TurnInPlace.DebugDraw"),
+	false,
+	TEXT("Enable turn in place variables to be drawn in the world. (0 = disable, 1 = enable)"),
+	ECVF_Cheat
+);
 
 
 AShooterCharacter::AShooterCharacter()
@@ -49,6 +58,9 @@ AShooterCharacter::AShooterCharacter()
 	GetMesh()->bOnlyOwnerSee = false;
 	GetMesh()->bOwnerNoSee = true;
 	GetMesh()->bReceivesDecals = false;
+	
+	StartingAimRotation = FRotator::ZeroRotator;
+	TurningStatus = ETurningInPlace::NotTurning;
 }
 
 void AShooterCharacter::BeginPlay()
@@ -56,6 +68,8 @@ void AShooterCharacter::BeginPlay()
 	Super::BeginPlay();
 	
 	FirstPersonCamera->SetFieldOfView(DefaultFieldOfView);
+	
+	StartingAimRotation = GetFixedAimRotation();
 }
 
 void AShooterCharacter::BeginDestroy()
@@ -81,45 +95,109 @@ void AShooterCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	
-	CalculateTurnInPlaceParameters();
+	CalculateTurnInPlaceParameters(DeltaTime);
 	CalculateFABRIKSocketTransform();
 }
 
-void AShooterCharacter::CalculateTurnInPlaceParameters()
+void AShooterCharacter::CalculateTurnInPlaceParameters(float DeltaTime)
 {
-	// Get velocity, check if it's zero
-	// Check if we are falling
+	bool bEnabledDebugDraw = CVarTurnInPlaceDebugDrawing.GetValueOnGameThread();
+	if (bEnabledDebugDraw)
+	{
+		FString TurningStatusAsString;
+		switch (TurningStatus)
+		{
+		case ETurningInPlace::NotTurning:
+			TurningStatusAsString = "NotTurning";
+			break;
+		case ETurningInPlace::Right:
+			TurningStatusAsString = "Right";
+			break;
+		case ETurningInPlace::Left:
+			TurningStatusAsString = "Left";
+			break;
+		}
+		
+		if (IsValid(Combat) && IsValid(Combat->CurrentWeapon))
+		{
+			FString DebugString = FString::Printf(TEXT("AO_Yaw: %f \nTurningStatus: %s"), AO_Yaw, *TurningStatusAsString);
+			FVector DebugStringLocation = Combat->CurrentWeapon->GetMesh1P()->GetSocketLocation("Muzzle");
+			DebugStringLocation.Z += 20.0f;
+			DrawDebugString(GetWorld(), DebugStringLocation, DebugString, nullptr, FColor::White, 0.0f, false, 1.25f);
+		}
+	}
+	
+	FVector Velocity = GetCharacterMovement()->Velocity;
+	float SpeedSquared = Velocity.SizeSquared2D();
+	
+	bool bIsInAir = GetCharacterMovement()->IsFalling();
 	
 	// If standing still and not jumping
+	if (FMath::IsNearlyZero(SpeedSquared) && !bIsInAir)
+	{
 		// Get current aim rotation
-		// Get delta aim rotation (the difference in rotation of current aim rotation from initial aim rotation)
-		// (initial aim rotation is calculated in BeginPlay)
-		// Store yaw of delta aim rotation in a variable called AO_Yaw
-		// If TurningStatus == NotTurning
-			// Set InterpAO_Yaw = AO_Yaw
-		// TurnInPlace() - interpolates the InterpAO_Yaw value to zero
+		FRotator CurrentAimRotation = GetFixedAimRotation();
+		
+		// Get delta aim rotation (the difference in rotation of current aim rotation from starting aim rotation)
+		// (StartingAimRotation is calculated in BeginPlay)
+		FRotator DeltaAimRotation = UKismetMathLibrary::NormalizedDeltaRotator(CurrentAimRotation, StartingAimRotation);
+		
+		AO_Yaw = DeltaAimRotation.Yaw;
+		
+		if (TurningStatus == ETurningInPlace::NotTurning)
+		{
+			InterpAO_Yaw = AO_Yaw;
+		}
+		
+		// Interpolates the InterpAO_Yaw value to zero
+		TurnInPlace(DeltaTime);
+	}
 	
 	// If running or jumping
+	if (!FMath::IsNearlyZero(SpeedSquared) || bIsInAir)
+	{
 		// Reset initial aim rotation to current aim rotation
-		// Set AO_Yaw = 0
+		StartingAimRotation = GetFixedAimRotation();
+		AO_Yaw = 0.0f;
+		
 		// We also need a Movement Offset Yaw to feed to our strafing blendspaces
 		// Get base aim rotation
+		FRotator AimRotation = GetFixedAimRotation();
 		// Get movement rotation (this is the rotation of our velocity)
+		FRotator MovementRotation = UKismetMathLibrary::MakeRotFromX(GetCharacterMovement()->Velocity);
 		// Movement Offset Yaw = delta between movement rotation and aim rotation
-		// Set TurningStatus = NotTurning
+		MovementOffsetYaw = UKismetMathLibrary::NormalizedDeltaRotator(MovementRotation, AimRotation).Yaw;
+		
+		TurningStatus = ETurningInPlace::NotTurning;
+	}
+	
+	// This ensures that AO_Yaw isn't reversed
+	AO_Yaw *= 1.0f;
 }
 
-// TurnInPlace
-	// If AO_Yaw > 90
-		// Set TurningStatus = Right
-	// Else if AO_Yaw < -90
-		// Set TurningStatus = Left
-	// if TurningStatus != NotTurning (i.e. we are turning either left or right)
-		// Interpolate InterpAO_Yaw down to zero
-		// Set AO_Yaw = InterpAO_Yaw
-		// if Abs(AO_Yaw) < 5
-			// Set TurningStatus = NotTurning
-			// Reset initial aim rotation to current aim rotation
+void AShooterCharacter::TurnInPlace(float DeltaTime)
+{
+	if (AO_Yaw > 90.0f)
+	{
+		TurningStatus = ETurningInPlace::Right;
+	}
+	else if (AO_Yaw < -90.0f)
+	{
+		TurningStatus = ETurningInPlace::Left;
+	}
+	
+	// If we are turning either left or right
+	if (TurningStatus != ETurningInPlace::NotTurning)
+	{
+		InterpAO_Yaw = FMath::FInterpTo(InterpAO_Yaw, 0.0f, DeltaTime, 4.0f);
+		AO_Yaw = InterpAO_Yaw;
+		if (FMath::Abs(AO_Yaw) < 5.0f)
+		{
+			TurningStatus = ETurningInPlace::NotTurning;
+			StartingAimRotation = GetFixedAimRotation();
+		}
+	}
+}
 
 void AShooterCharacter::CalculateFABRIKSocketTransform()
 {
