@@ -77,5 +77,6 @@ Developed with Unreal Engine 5.8
     - `ABP_ThirdPerson` retrieves the rotation of the `ShooterCharacter` and uses the pitch value to drive the aim offsets, allowing players to see each other looking up and down.
     - `ABP_ThirdPerson` uses FABRIK to ensure the weapon is oriented correctly to the character's hands. It does so by using the weapon's `FABRIK_Socket` and the character's `hand_r` bone. Note that this approach assumes that every weapon's skeletal mesh has a socket with the name "FABRIK_Socket".
     - `ABP_ThirdPerson` handles animation logic needed for turning in place. To do so, it needs access to variables from the `ShooterCharacter` such as
-      - `TurningStatus`: tells which whether the character has turned passed the left/right threshold
-      - `MovementOffsetYaw`: the delta between the character's movement rotation and aim rotation
+      - `TurningStatus`: Tells whether the character has turned past the left/right threshold.
+      - `MovementOffsetYaw`: The delta between the character's movement rotation and aim rotation. This is used to drive the standing and crouching 1D blendspaces.
+    - `ABP_ThirdPerson` uses the `AO_Yaw` from the `ShooterCharacter` as the *orientation angle* for **Orientation Warping**. This allows the upper body to rotate while keeping the lower body in place.
