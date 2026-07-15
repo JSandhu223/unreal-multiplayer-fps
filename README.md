@@ -16,6 +16,7 @@ Developed with Unreal Engine 5.8
 - Contains a first person arms mesh `Mesh1P` and full body mesh (default character mesh).
 - Spawns the player inventory on call to `PossessedBy()`.
 - Implements the `PlayerInterface`.
+- Handles turn in place logic in `Tick()`.
 
 ### CombatComponent
 
@@ -51,6 +52,10 @@ Developed with Unreal Engine 5.8
             - Rifle
             - Pistol
 
+### ShooterTypes
+
+- Contains an enum `ETurningInPlace` which helps with the turn in place logic for the third person animations.
+
 ## Multiplayer
 
 ### Replication
@@ -71,3 +76,6 @@ Developed with Unreal Engine 5.8
     - Both animation blueprints read the `bAiming` variable from `ShooterCharacter`. This variable's result is then used to drive the hipfire and aiming animations on the equipped weapon.
     - `ABP_ThirdPerson` retrieves the rotation of the `ShooterCharacter` and uses the pitch value to drive the aim offsets, allowing players to see each other looking up and down.
     - `ABP_ThirdPerson` uses FABRIK to ensure the weapon is oriented correctly to the character's hands. It does so by using the weapon's `FABRIK_Socket` and the character's `hand_r` bone. Note that this approach assumes that every weapon's skeletal mesh has a socket with the name "FABRIK_Socket".
+    - `ABP_ThirdPerson` handles animation logic needed for turning in place. To do so, it needs access to variables from the `ShooterCharacter` such as
+      - `TurningStatus`: tells which whether the character has turned passed the left/right threshold
+      - `MovementOffsetYaw`: the delta between the character's movement rotation and aim rotation
