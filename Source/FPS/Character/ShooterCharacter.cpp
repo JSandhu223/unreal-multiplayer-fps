@@ -120,7 +120,13 @@ void AShooterCharacter::CalculateTurnInPlaceParameters(float DeltaTime)
 		
 		if (IsValid(Combat) && IsValid(Combat->CurrentWeapon))
 		{
-			FString DebugString = FString::Printf(TEXT("AO_Yaw: %f \nTurningStatus: %s"), AO_Yaw, *TurningStatusAsString);
+			FString DebugString = FString::Printf(TEXT(
+				"AO_Yaw: %f \nInterpAO_Yaw: %f \nTurningStatus: %s \nMovementOffsetYaw: %f"),
+				AO_Yaw,
+				InterpAO_Yaw,
+				*TurningStatusAsString,
+				MovementOffsetYaw
+			);
 			FVector DebugStringLocation = Combat->CurrentWeapon->GetMesh1P()->GetSocketLocation("Muzzle");
 			DebugStringLocation.Z += 20.0f;
 			DrawDebugString(GetWorld(), DebugStringLocation, DebugString, nullptr, FColor::White, 0.0f, false, 1.25f);
@@ -166,12 +172,14 @@ void AShooterCharacter::CalculateTurnInPlaceParameters(float DeltaTime)
 		// Get movement rotation (this is the rotation of our velocity)
 		FRotator MovementRotation = UKismetMathLibrary::MakeRotFromX(GetCharacterMovement()->Velocity);
 		// Movement Offset Yaw = delta between movement rotation and aim rotation
+		// (another way to think of this is the difference in angle between the direction we're moving and the direction we're aiming)
 		MovementOffsetYaw = UKismetMathLibrary::NormalizedDeltaRotator(MovementRotation, AimRotation).Yaw;
 		
 		TurningStatus = ETurningInPlace::NotTurning;
 	}
 	
 	// This ensures that AO_Yaw isn't reversed
+	// AO_Yaw *= -1.0f;
 	AO_Yaw *= 1.0f;
 }
 
