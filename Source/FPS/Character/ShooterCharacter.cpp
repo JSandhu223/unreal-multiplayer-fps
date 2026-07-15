@@ -179,8 +179,8 @@ void AShooterCharacter::CalculateTurnInPlaceParameters(float DeltaTime)
 	}
 	
 	// This ensures that AO_Yaw isn't reversed
-	// AO_Yaw *= -1.0f;
-	AO_Yaw *= 1.0f;
+	AO_Yaw *= -1.0f;
+	// AO_Yaw *= 1.0f;
 }
 
 void AShooterCharacter::TurnInPlace(float DeltaTime)
