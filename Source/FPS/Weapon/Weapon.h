@@ -23,12 +23,15 @@ public:
 	USkeletalMeshComponent* GetMesh3P() const;
 	
 	void AttachToOwningPawn() const;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="FPS|Weapon Type")
+	FGameplayTag WeaponType;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="FPS|Aiming")
+	float AimFieldOfView;
 
 protected:
 	virtual void BeginPlay() override;
-	
-	UPROPERTY(EditDefaultsOnly, Category="FPS|Weapon Type")
-	FGameplayTag WeaponType;
 	
 private:
 	// Weapon Mesh: first person view
