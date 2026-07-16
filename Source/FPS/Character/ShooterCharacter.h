@@ -85,6 +85,10 @@ protected:
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category="FPS|Turn in Place")
 	float AO_Yaw = 0.0f;
 	
+	// This ensures that AO_Yaw isn't reversed
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category="FPS|Turn in Place")
+	float NegatedAO_Yaw = 0.0f;
+	
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category="FPS|Turn in Place")
 	ETurningInPlace TurningStatus;
 	

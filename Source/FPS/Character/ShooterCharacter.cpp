@@ -179,12 +179,12 @@ void AShooterCharacter::CalculateTurnInPlaceParameters(float DeltaTime)
 	}
 	
 	// This ensures that AO_Yaw isn't reversed
-	AO_Yaw *= -1.0f;
-	// AO_Yaw *= 1.0f;
+	NegatedAO_Yaw = AO_Yaw * -1.0f;
 }
 
 void AShooterCharacter::TurnInPlace(float DeltaTime)
 {
+	// Note: NegatedAO_Yaw isn't set until after this function finishes executing.
 	if (AO_Yaw > 90.0f)
 	{
 		TurningStatus = ETurningInPlace::Right;
