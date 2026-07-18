@@ -35,13 +35,21 @@ Developed with Unreal Engine 5.8
 ### WeaponData
 
 - A data asset that holds all data related to weapons.
-- Contains the following data:
-    - A `TMap` field that maps a WeaponType gameplay tag to an FName.
+    - `FPlayerAnims` - a custom struct that holds animation sequences, aim offsets, and blendspaces. Note that first person animations won't make use of aim offsets or blendspaces as these are strictly for the third person mesh.
+    - `FMontageData` - a custom struct that holds animation montage assets for first person and third person.
+    - `GripPoints` - maps the weapon type to a grip point socket.
+    - `WeaponMontages` - maps the weapon type to a weapon animation montage not tied to that weapon type (these are animation montages that involve just the weapon mesh without a player skeleton).
+    - `FirstPersonAnims` - maps the weapon type to a struct holding all first person animation assets for that particular weapon type.
+    - `ThirdPersobAnims` - maps the weapon type to a struct holding all third person animation assets for that weapon type.
+    - FirstPersonMontages - maps the weapon type to a struct holding first person animation montage assets for that weapon type (these animation montages involve a player skeleton).
+    - ThirdPersonMontages - maps the weapon type to a struct holding third person animation montage assets for that weapon type (these animation montages involve a player skeleton).
     - Two `TMap` fields that maps a WeaponType to an FPlayerAnims struct, which holds animation data such as animation sequences and blendspaces. The first TMap corresponds to first person animations and the second TMap corresponds to third person animations.
 
 ### PlayerInterface
 
 - Consists of getter functions, preventing any hard dependencies between the `ShoooterCharacter` and `Weapon`.
+- The functions in this interface are marked as `BlueprintNativeEvents`. As a result, we can call these functions as static functions, passing in the target object (i.e. the object we want to trigger the interface function on) as an argument. Note that this is analogous to casting the object to the inteface and calling the interface function on it.
+  - For example, suppose we want to access the character's first person mesh from its `CombatComponent`. Since the function `GetMesh1P()` is a `BlueprintNativeEvent`, and we know that the `ShooterCharacter` inherits from the `PlayerInterface`, we can call `IPlayerInterface::Execute_GetMesh1P(GetOwner())`.
 
 ### ShooterGameplayTags
 
@@ -58,13 +66,13 @@ Developed with Unreal Engine 5.8
 
 ## Multiplayer
 
-### Replication
-
 - The `ShooterCharacter` is set to be replicated by default.
 - The `Weapon` actor is replicated.
 - The `CombatComponent` on the `ShooterCharacter` is registered for replication.
 - In the `CombatComponent` class, the `Inventory` and `CurrentWeapon` fields are registered for replication.
 - The `CombatComponent` has a `bAiming` boolean variable that is registered for replication. When it updates, a server RPC is called, which updates the value of this variable on the server, which in turn replicates it down to all clients.
+- The `CombatComponent` handles first person weapon animations locally. Third person weapon animations are handled in the multicast RPC. The order of execution is as follows:
+  - `Local_FireWeapon` -> `Server_FireWeapon` -> `Multicast_FireWeapon`
 
 ## Animation
 
@@ -74,6 +82,7 @@ Developed with Unreal Engine 5.8
 - Both animation blueprints override `BlueprintThreadSafeUpdateAnimation` to access variables and functions from the cached `ShooterCharacter`.
     - Both animation blueprints retrieve the `CurrentWeapon` from the combat component of the cached `ShooterCharacter` to get its animations. The animations all live in the data asset and are tied to the weapon type.
     - Both animation blueprints read the `bAiming` variable from `ShooterCharacter`. This variable's result is then used to drive the hipfire and aiming animations on the equipped weapon.
+    - Both animation blueprints have a *DefaultSlot* node to allow for playing of any animation montages, assuming their slot group is set to *DefaultSlot*
     - `ABP_ThirdPerson` retrieves the rotation of the `ShooterCharacter` and uses the pitch value to drive the aim offsets, allowing players to see each other looking up and down.
     - `ABP_ThirdPerson` uses FABRIK to ensure the weapon is oriented correctly to the character's hands. It does so by using the weapon's `FABRIK_Socket` and the character's `hand_r` bone. Note that this approach assumes that every weapon's skeletal mesh has a socket with the name "FABRIK_Socket".
     - `ABP_ThirdPerson` handles animation logic needed for turning in place. To do so, it needs access to variables from the `ShooterCharacter` such as
