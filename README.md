@@ -48,8 +48,8 @@ Developed with Unreal Engine 5.8
 ### PlayerInterface
 
 - Consists of getter functions, preventing any hard dependencies between the `ShoooterCharacter` and `Weapon`.
-- The functions in this interface are marked as `BlueprintNativeEvents`. As a result, we can call these functions as static functions, passing in the target object (i.e. the object we want to trigger the interface function on) as an argument. Note that this is analogous to casting the object to the inteface and calling the interface function on it.
-  - For example, suppose we want to access the character's first person mesh from its `CombatComponent`. Since the function `GetMesh1P()` is a `BlueprintNativeEvent`, and we know that the `ShooterCharacter` inherits from the `PlayerInterface`, we can call `IPlayerInterface::Execute_GetMesh1P(GetOwner())`.
+- The functions in this interface are marked as `BlueprintNativeEvents`. Becuase of this, we can call these functions as static functions, passing in the target object (i.e. the object we want to call the interface function on) as an argument.
+  - For example, suppose we want to access the character's first person mesh from its `CombatComponent`. Since the function `GetMesh1P()` is a `BlueprintNativeEvent`, and we know that the `ShooterCharacter` implements the `PlayerInterface`, we can call `IPlayerInterface::Execute_GetMesh1P(GetOwner())`.
 
 ### ShooterGameplayTags
 
