@@ -30,7 +30,7 @@ Developed with Unreal Engine 5.8
 
 - Contains a first person mesh `Mesh1P` and third person mesh `Mesh3P` for the weapon skeletal mesh.
 - Handles attachment of the respective skeletal mesh to the player's appropriate skeleton socket.
-- Sets the visibility of each mesh based on the authority of the owming pawn.
+- Sets the visibility of each mesh based on the authority of the owning pawn.
 
 ### WeaponData
 
@@ -43,7 +43,6 @@ Developed with Unreal Engine 5.8
     - `ThirdPersobAnims` - maps the weapon type to a struct holding all third person animation assets for that weapon type.
     - FirstPersonMontages - maps the weapon type to a struct holding first person animation montage assets for that weapon type (these animation montages involve a player skeleton).
     - ThirdPersonMontages - maps the weapon type to a struct holding third person animation montage assets for that weapon type (these animation montages involve a player skeleton).
-    - Two `TMap` fields that maps a WeaponType to an FPlayerAnims struct, which holds animation data such as animation sequences and blendspaces. The first TMap corresponds to first person animations and the second TMap corresponds to third person animations.
 
 ### PlayerInterface
 
@@ -82,7 +81,7 @@ Developed with Unreal Engine 5.8
 - Both animation blueprints override `BlueprintThreadSafeUpdateAnimation` to access variables and functions from the cached `ShooterCharacter`.
     - Both animation blueprints retrieve the `CurrentWeapon` from the combat component of the cached `ShooterCharacter` to get its animations. The animations all live in the data asset and are tied to the weapon type.
     - Both animation blueprints read the `bAiming` variable from `ShooterCharacter`. This variable's result is then used to drive the hipfire and aiming animations on the equipped weapon.
-    - Both animation blueprints have a *DefaultSlot* node to allow for playing of any animation montages, assuming their slot group is set to *DefaultSlot*
+    - Both animation blueprints have a *DefaultSlot* node to allow for playing of any animation montages, assuming their slot group is set to *DefaultSlot*.
     - `ABP_ThirdPerson` retrieves the rotation of the `ShooterCharacter` and uses the pitch value to drive the aim offsets, allowing players to see each other looking up and down.
     - `ABP_ThirdPerson` uses FABRIK to ensure the weapon is oriented correctly to the character's hands. It does so by using the weapon's `FABRIK_Socket` and the character's `hand_r` bone. Note that this approach assumes that every weapon's skeletal mesh has a socket with the name "FABRIK_Socket".
     - `ABP_ThirdPerson` handles animation logic needed for turning in place. To do so, it needs access to variables from the `ShooterCharacter` such as
