@@ -61,4 +61,12 @@ private:
 	void Server_Aim(bool bPressed);
 	
 	void Local_Aim(bool bPressed);
+	
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_FireWeapon();
+	
+	UFUNCTION(Server, Reliable)
+	void Server_FireWeapon();
+	
+	void Local_FireWeapon();
 };

@@ -1,7 +1,9 @@
 #include "CombatComponent.h"
 
+#include "Animation/AnimInstance.h"
 #include "Character/ShooterCharacter.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "Data/WeaponData.h"
 #include "Engine/Engine.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/Pawn.h"
@@ -40,12 +42,57 @@ void UCombatComponent::Initiate_ReloadWeapon()
 
 void UCombatComponent::Initiate_FireWeapon_Pressed()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Cyan, TEXT("Initiate_FireWeapon_Pressed"), false);
+	Local_FireWeapon();
+}
+
+void UCombatComponent::Local_FireWeapon()
+{
+	ensure(IsValid(WeaponData));
+	// play the fire weapon montage for the first person mesh
+	UAnimMontage* Montage1P = WeaponData->FirstPersonMontages.FindChecked(CurrentWeapon->WeaponType).FireMontage;
+	USkeletalMeshComponent* Mesh1P = IPlayerInterface::Execute_GetMesh1P(GetOwner());
+	
+	if (Montage1P && IsValid(Mesh1P))
+	{
+		Mesh1P->GetAnimInstance()->Montage_Play(Montage1P);
+	}
+		
+	Server_FireWeapon();
+}
+
+void UCombatComponent::Server_FireWeapon_Implementation()
+{
+	Multicast_FireWeapon();
+}
+
+void UCombatComponent::Multicast_FireWeapon_Implementation()
+{
+	APawn* OwningPawn = Cast<APawn>(GetOwner());
+	
+	// Do locally controlled stuff here
+	if (OwningPawn->IsLocallyControlled())
+	{
+		
+	}
+	
+	// Executes on other machines
+	else
+	{
+		ensure(IsValid(WeaponData));
+		
+		UAnimMontage* Montage3P = WeaponData->ThirdPersonMontages.FindChecked(CurrentWeapon->WeaponType).FireMontage;
+		USkeletalMeshComponent* Mesh3P = IPlayerInterface::Execute_GetMesh3P(GetOwner());
+		
+		if (Montage3P && IsValid(Mesh3P))
+		{
+			Mesh3P->GetAnimInstance()->Montage_Play(Montage3P);
+		}
+	}
 }
 
 void UCombatComponent::Initiate_FireWeapon_Released()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Cyan, TEXT("Initiate_FireWeapon_Released"), false);
+	
 }
 
 void UCombatComponent::Initiate_Aim_Pressed()
