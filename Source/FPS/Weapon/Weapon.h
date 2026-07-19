@@ -38,19 +38,19 @@ public:
 	void Local_Fire(const FVector& ImpactPoint, const FVector& ImpactNormal, TEnumAsByte<EPhysicalSurface> ImpactSurfaceType, bool bIsFirstPerson);
 
 protected:
+	// Weapon Mesh: first person view
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="FPS|Weapon")
+	TObjectPtr<USkeletalMeshComponent> Mesh1P;
+	
+	// Weapon Mesh: third person view
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="FPS|Weapon")
+	TObjectPtr<USkeletalMeshComponent> Mesh3P;
+	
 	virtual void BeginPlay() override;
 	
 	UFUNCTION(BlueprintImplementableEvent)
 	void FireEffects(const FVector& ImpactPoint, const FVector& ImpactNormal, EPhysicalSurface ImpactSurfaceType, bool bIsFirstPerson);
 	
 private:
-	// Weapon Mesh: first person view
-	UPROPERTY(VisibleAnywhere)
-	TObjectPtr<USkeletalMeshComponent> Mesh1P;
-	
-	// Weapon Mesh: third person view
-	UPROPERTY(VisibleAnywhere)
-	TObjectPtr<USkeletalMeshComponent> Mesh3P;
-	
 	void SetMeshVisibilities(APawn* OwningPawn) const;
 };

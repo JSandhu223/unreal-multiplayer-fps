@@ -120,6 +120,12 @@ void AWeapon::WeaponTrace(FHitResult& OutHit, float TraceLength)
 			ResponseParams
 		);
 		
+		// If the trace doesn't hit, then manually set the impact point.
+		if (!bHit)
+		{
+			OutHit.ImpactPoint = End;
+		}
+		
 		bool bEnabledDebugDraw = CVarWeaponTraceDebugDrawing.GetValueOnGameThread();
 		if (bEnabledDebugDraw)
 		{
@@ -142,7 +148,13 @@ void AWeapon::WeaponTrace(FHitResult& OutHit, float TraceLength)
 void AWeapon::Local_Fire(const FVector& ImpactPoint, const FVector& ImpactNormal,
 	TEnumAsByte<EPhysicalSurface> ImpactSurfaceType, bool bIsFirstPerson)
 {
-	DrawDebugSphere(GetWorld(), ImpactPoint, 5.0f, 12, FColor::White, false, 3.0f);
+	bool bEnabledDebugDraw = CVarWeaponTraceDebugDrawing.GetValueOnGameThread();
+	if (bEnabledDebugDraw)
+	{
+		DrawDebugSphere(GetWorld(), ImpactPoint, 5.0f, 12, FColor::White, false, 3.0f);
+	}
+	
+	FireEffects(ImpactPoint, ImpactNormal, ImpactSurfaceType, bIsFirstPerson);
 }
 
 void AWeapon::SetMeshVisibilities(APawn* OwningPawn) const
