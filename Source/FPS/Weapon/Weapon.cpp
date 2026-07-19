@@ -8,6 +8,14 @@
 #include "Kismet/KismetMathLibrary.h"
 
 
+TAutoConsoleVariable<bool> CVarWeaponTraceDebugDrawing(
+	TEXT("game.weapon.trace.DebugDraw"), 
+	false, 
+	TEXT("Enable debug drawing for tracing weapon fire. (0 = disable, 1 = enable)"),
+	ECVF_Cheat
+);
+
+
 AWeapon::AWeapon()
 {
 	PrimaryActorTick.bCanEverTick = false;
@@ -112,19 +120,29 @@ void AWeapon::WeaponTrace(FHitResult& OutHit, float TraceLength)
 			ResponseParams
 		);
 		
-		DrawDebugSphereTraceSingle(
-			GetWorld(),
-			Start,
-			End,
-			TraceRadius,
-			EDrawDebugTrace::ForDuration,
-			bHit,
-			OutHit,
-			FColor::Red,
-			FColor::Green,
-			5.0f
-		);
+		bool bEnabledDebugDraw = CVarWeaponTraceDebugDrawing.GetValueOnGameThread();
+		if (bEnabledDebugDraw)
+		{
+			DrawDebugSphereTraceSingle(
+				GetWorld(),
+				Start,
+				End,
+				TraceRadius,
+				EDrawDebugTrace::ForDuration,
+				bHit,
+				OutHit,
+				FColor::Red,
+				FColor::Green,
+				5.0f
+			);
+		}
 	}
+}
+
+void AWeapon::Local_Fire(const FVector& ImpactPoint, const FVector& ImpactNormal,
+	TEnumAsByte<EPhysicalSurface> ImpactSurfaceType, bool bIsFirstPerson)
+{
+	DrawDebugSphere(GetWorld(), ImpactPoint, 5.0f, 12, FColor::White, false, 3.0f);
 }
 
 void AWeapon::SetMeshVisibilities(APawn* OwningPawn) const

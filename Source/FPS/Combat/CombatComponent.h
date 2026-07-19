@@ -67,10 +67,10 @@ private:
 	void Local_Aim(bool bPressed);
 	
 	UFUNCTION(NetMulticast, Reliable)
-	void Multicast_FireWeapon();
+	void Multicast_FireWeapon(const FHitResult& Hit);
 	
 	UFUNCTION(Server, Reliable)
-	void Server_FireWeapon();
+	void Server_FireWeapon(const FHitResult& Hit);
 	
 	void Local_FireWeapon();
 };
