@@ -43,6 +43,10 @@ public:
 	UPROPERTY(Transient, BlueprintReadOnly, ReplicatedUsing=OnRep_CurrentWeapon)
 	TObjectPtr<AWeapon> CurrentWeapon;
 	
+protected:
+	UPROPERTY(EditDefaultsOnly, Category="FPS|Weapon")
+	float TraceLength;
+	
 private:
 	// Called when CurrentWeapon replicates to clients
 	UFUNCTION()

@@ -24,11 +24,16 @@ public:
 	
 	void AttachToOwningPawn() const;
 	
+	void WeaponTrace(FHitResult& OutHit, float TraceLength);
+	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="FPS|Weapon Type")
 	FGameplayTag WeaponType;
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="FPS|Aiming")
 	float AimFieldOfView;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="FPS|Trace")
+	float TraceRadius;
 
 protected:
 	virtual void BeginPlay() override;

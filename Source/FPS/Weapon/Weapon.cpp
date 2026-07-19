@@ -1,8 +1,11 @@
 #include "Weapon.h"
 
+#include "FPS.h"
+#include "KismetTraceUtils.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "GameFramework/Pawn.h"
 #include "Interfaces/PlayerInterface.h"
+#include "Kismet/KismetMathLibrary.h"
 
 
 AWeapon::AWeapon()
@@ -27,6 +30,8 @@ AWeapon::AWeapon()
 	Mesh3P->SetupAttachment(Mesh1P);
 	
 	AimFieldOfView = 65.0f;
+	
+	TraceRadius = 5.0f;
 }
 
 void AWeapon::OnRep_Instigator()
@@ -67,6 +72,59 @@ void AWeapon::AttachToOwningPawn() const
 	// We are assuming the AttachPoint has the same name on both the weapon meshes
 	Mesh1P->AttachToComponent(PawnMesh1P, FAttachmentTransformRules::KeepRelativeTransform, AttachPoint);
 	Mesh3P->AttachToComponent(PawnMesh3P, FAttachmentTransformRules::KeepRelativeTransform, AttachPoint);
+}
+
+void AWeapon::WeaponTrace(FHitResult& OutHit, float TraceLength)
+{
+	FCollisionQueryParams QueryParams;
+	QueryParams.bReturnPhysicalMaterial = true;
+	QueryParams.AddIgnoredActor(GetOwner());
+	
+	FCollisionResponseParams ResponseParams;
+	// Ignore all channels. Then pick which specific channels to block.
+	ResponseParams.CollisionResponse.SetAllChannels(ECR_Ignore);
+	ResponseParams.CollisionResponse.SetResponse(ECC_Pawn, ECR_Block);
+	ResponseParams.CollisionResponse.SetResponse(ECC_WorldStatic, ECR_Block);
+	ResponseParams.CollisionResponse.SetResponse(ECC_WorldDynamic, ECR_Block);
+	ResponseParams.CollisionResponse.SetResponse(ECC_PhysicsBody, ECR_Block);
+	
+	ensure(GetInstigator());
+	APlayerController* PC = CastChecked<APlayerController>(GetInstigator()->GetController());
+	if (IsValid(PC))
+	{
+		FVector EyesWorldLocation;
+		FRotator EyesWorldRotation;
+		PC->GetActorEyesViewPoint(EyesWorldLocation, EyesWorldRotation);
+		
+		const FVector EyesWorldDirection = UKismetMathLibrary::GetForwardVector(EyesWorldRotation);
+		
+		const FVector Start = EyesWorldLocation;
+		const FVector End = Start + (EyesWorldDirection * TraceLength);
+		
+		const bool bHit = GetWorld()->SweepSingleByChannel(
+			OutHit,
+			Start,
+			End,
+			FQuat::Identity,
+			FPSTraceChannel::ECC_Weapon,
+			FCollisionShape::MakeSphere(TraceRadius),
+			QueryParams,
+			ResponseParams
+		);
+		
+		DrawDebugSphereTraceSingle(
+			GetWorld(),
+			Start,
+			End,
+			TraceRadius,
+			EDrawDebugTrace::ForDuration,
+			bHit,
+			OutHit,
+			FColor::Red,
+			FColor::Green,
+			5.0f
+		);
+	}
 }
 
 void AWeapon::SetMeshVisibilities(APawn* OwningPawn) const
