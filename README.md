@@ -16,7 +16,7 @@ Developed with Unreal Engine 5.8
 - Contains a first person arms mesh `Mesh1P` and full body mesh (default character mesh).
 - Spawns the player inventory on call to `PossessedBy()`.
 - Implements the `PlayerInterface`.
-- Handles turn in place logic in `Tick()`.
+- Handles turn in place calculations in `Tick()`.
 
 ### CombatComponent
 
@@ -31,6 +31,11 @@ Developed with Unreal Engine 5.8
 - Contains a first person mesh `Mesh1P` and third person mesh `Mesh3P` for the weapon skeletal mesh.
 - Handles attachment of the respective skeletal mesh to the player's appropriate skeleton socket.
 - Sets the visibility of each mesh based on the authority of the owning pawn.
+
+### BP_Weapon
+
+- The master blueprint for all weapons. Derives from the c++ `Weapon` class.
+- Handles weapon effects such as firing effects, bullets impacts, decals, sounds, and animation montages.
 
 ### WeaponData
 
@@ -79,12 +84,12 @@ Developed with Unreal Engine 5.8
 - All third person animations are driven by `ABP_ThirdPerson`.
 - Both animation blueprints use the `BlueprintAnimationInitialize` function/event to cache a reference to the `ShooterCharacter` c++ class by casting the result of `TryGetPawnOwner`.
 - Both animation blueprints override `BlueprintThreadSafeUpdateAnimation` to access variables and functions from the cached `ShooterCharacter`.
-    - Both animation blueprints retrieve the `CurrentWeapon` from the combat component of the cached `ShooterCharacter` to get its animations. The animations all live in the data asset and are tied to the weapon type.
+    - Both animation blueprints retrieve the `CurrentWeapon` from the combat component of the cached `ShooterCharacter` to get its animations. The animations all live in the data asset and are mapped to by the weapon type.
     - Both animation blueprints read the `bAiming` variable from `ShooterCharacter`. This variable's result is then used to drive the hipfire and aiming animations on the equipped weapon.
-    - Both animation blueprints have a *DefaultSlot* node to allow for playing of any animation montages, assuming their slot group is set to *DefaultSlot*.
+    - Both animation blueprints have a *DefaultSlot* node to allow for playing of any animation montages, assuming the montage's slot group is set to *DefaultSlot*.
     - `ABP_ThirdPerson` retrieves the rotation of the `ShooterCharacter` and uses the pitch value to drive the aim offsets, allowing players to see each other looking up and down.
     - `ABP_ThirdPerson` uses FABRIK to ensure the weapon is oriented correctly to the character's hands. It does so by using the weapon's `FABRIK_Socket` and the character's `hand_r` bone. Note that this approach assumes that every weapon's skeletal mesh has a socket with the name "FABRIK_Socket".
     - `ABP_ThirdPerson` handles animation logic needed for turning in place. To do so, it needs access to variables from the `ShooterCharacter` such as
       - `TurningStatus`: Tells whether the character has turned past the left/right threshold.
       - `MovementOffsetYaw`: The delta between the character's movement rotation and aim rotation. This is used to drive the standing and crouching 1D blendspaces.
-    - `ABP_ThirdPerson` uses the `NegatedAO_Yaw` from the `ShooterCharacter` as the *orientation angle* for **Orientation Warping**. This allows the upper body to rotate while keeping the lower body in place.
+    - `ABP_ThirdPerson` uses the `NegatedAO_Yaw` from the `ShooterCharacter` as the *orientation angle* input to the **Orientation Warping** node. This allows the upper body to rotate while keeping the lower body in place.
