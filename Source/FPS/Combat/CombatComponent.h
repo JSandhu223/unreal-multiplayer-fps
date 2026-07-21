@@ -48,6 +48,10 @@ protected:
 	float TraceLength;
 	
 private:
+	bool bTriggerPressed;
+	FTimerHandle FireTimer;
+	void FireTimerFinished();
+	
 	// Called when CurrentWeapon replicates to clients
 	UFUNCTION()
 	void OnRep_CurrentWeapon(AWeapon* LastWeapon);

@@ -37,6 +37,8 @@ AWeapon::AWeapon()
 	Mesh3P->SetHiddenInGame(true);
 	Mesh3P->SetupAttachment(Mesh1P);
 	
+	FireTime = 0.1f;
+	
 	AimFieldOfView = 65.0f;
 	
 	TraceRadius = 5.0f;
