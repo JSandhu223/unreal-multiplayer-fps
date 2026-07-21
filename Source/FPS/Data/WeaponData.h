@@ -5,6 +5,7 @@
 #include "Engine/DataAsset.h"
 #include "WeaponData.generated.h"
 
+class UAnimMontage;
 class UBlendSpace;
 class UAnimSequence;
 
@@ -40,6 +41,22 @@ struct FPlayerAnims
 };
 
 
+USTRUCT(BlueprintType)
+struct FMontageData
+{
+	GENERATED_BODY()
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	TObjectPtr<UAnimMontage> EquipMontage = nullptr;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	TObjectPtr<UAnimMontage> ReloadMontage = nullptr;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	TObjectPtr<UAnimMontage> FireMontage = nullptr;
+};
+
+
 UCLASS()
 class FPS_API UWeaponData : public UDataAsset
 {
@@ -49,9 +66,18 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category="FPS|Weapon Data|Weapons")
 	TMap<FGameplayTag, FName> GripPoints;
 	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="FPS|Weapon Data|Weapons")
+	TMap<FGameplayTag, FMontageData> WeaponMontages;
+	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="FPS|Weapon Data|First Person")
 	TMap<FGameplayTag, FPlayerAnims> FirstPersonAnims;
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="FPS|Weapon Data|Third Person")
 	TMap<FGameplayTag, FPlayerAnims> ThirdPersonAnims;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="FPS|Weapon Data|First Person")
+	TMap<FGameplayTag, FMontageData> FirstPersonMontages;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="FPS|Weapon Data|Third Person")
+	TMap<FGameplayTag, FMontageData> ThirdPersonMontages;
 };

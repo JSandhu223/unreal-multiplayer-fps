@@ -10,7 +10,7 @@ public class FPS : ModuleRules
 		
 		PublicIncludePaths.Add("FPS");
 	
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "GameplayTags" });
+		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "GameplayTags", "PhysicsCore" });
 
 		PrivateDependencyModuleNames.AddRange(new string[] { "EnhancedInput" });
 
