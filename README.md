@@ -81,6 +81,18 @@ Developed with Unreal Engine 5.8
 - The `CombatComponent` has a `bAiming` boolean variable that is registered for replication. When it updates, a server RPC is called, which updates the value of this variable on the server, which in turn replicates it down to all clients.
 - The `CombatComponent` handles first person weapon animations locally. Third person weapon animations are handled in the multicast RPC. The order of execution is as follows:
   - `Local_FireWeapon` -> `Server_FireWeapon` -> `Multicast_FireWeapon`
+- A client-side prediction algorithm is used to track ammo for each player. The algorithm tracks both an `Ammo` and `Sequence` variable to ensure the server and client stay in sync with their ammo counts. This is necessary since the server holds the authority on the ammo count in order to prevent clients from cheating. For the case of a client on a dedicated server, the algorithm runs as follows:
+  - `Ammo` and `Sequence` are initialized.
+  - When player presses input key bound to the Fire action, `UCombatComponent::Initiate_FireWeapon_Pressed` is called.
+  - `UCombatComponent::Initiate_FireWeapon_Pressed` calls `UCombatComponent::Local_FireWeapon`, which in turn calls `AWeapon::Local_Fire` to decrement the `Ammo` and increment the `Sequence`.
+  - After returning from `AWeapon::Local_Fire`, `UCombatComponent` calls the server RPC `UCombatComponent::Server_FireWeapon`, which is a function that only executes on the server. Then only if the combat component's owner is not on a listen server or is not locally controlled, a call to `AWeapon::AuthFire` is made, which just decrements the `Ammo`. Here we can `Ammo` the `AuthAmmo` (the authoritative ammo). Note that `AWeapon::AuthFire` will never be called for a player on a listen server, since they themselves are the authority!
+  - A call is made to the multicast RPC `UCombatComponent::Multicast_FireWeapon`.
+  - `UCombatComponent::Multicast_FireWeapon` makes a call to `AWeapon::Rep_Fire` which performs the following steps:
+    ```
+    Ammo = AuthAmmo
+    Sequence = Sequence - 1
+    Ammo = Ammo - Sequence
+    ```
 
 ## Animation
 
