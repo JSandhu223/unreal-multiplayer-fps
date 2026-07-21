@@ -24,11 +24,13 @@ Developed with Unreal Engine 5.8
 - Contains a `Weapon` array representing the player inventory.
 - Contains an array of default weapons (set in the blueprint editor), all of which get spawned by the `ShooterCharacter` and get added to the inventory array.
 - Holds a reference to the `CurrentWeapon`.
+- Uses a boolean and a timer handle for handling full auto weapon fire.
 - Handles multiplayer and replication logic.
 
 ### Weapon
 
 - Contains a first person mesh `Mesh1P` and third person mesh `Mesh3P` for the weapon skeletal mesh.
+- Uses enums EWeaponType (pistol, rifle, etc.) and EFireType (full auto, semi auto).
 - Handles attachment of the respective skeletal mesh to the player's appropriate skeleton socket.
 - Sets the visibility of each mesh based on the authority of the owning pawn.
 
