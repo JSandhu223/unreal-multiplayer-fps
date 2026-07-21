@@ -50,9 +50,18 @@ void UCombatComponent::Initiate_ReloadWeapon()
 
 void UCombatComponent::Initiate_FireWeapon_Pressed()
 {
+	if (!IsValid(CurrentWeapon)) { return; }
+	
 	bTriggerPressed = true;
 	
-	Local_FireWeapon();
+	if (CurrentWeapon->Ammo > 0)
+	{
+		Local_FireWeapon();
+	}
+	else
+	{
+		// Optional: implement "dry fire" animation on BP_Weapon to signify to the player that they are out of ammo
+	}
 }
 
 void UCombatComponent::Local_FireWeapon()
@@ -60,6 +69,7 @@ void UCombatComponent::Local_FireWeapon()
 	if (!IsValid(CurrentWeapon)) { return; }
 	
 	ensure(IsValid(WeaponData));
+	
 	// play the fire weapon montage for the first person mesh
 	UAnimMontage* Montage1P = WeaponData->FirstPersonMontages.FindChecked(CurrentWeapon->WeaponType).FireMontage;
 	USkeletalMeshComponent* Mesh1P = IPlayerInterface::Execute_GetMesh1P(GetOwner());
@@ -86,23 +96,35 @@ void UCombatComponent::FireTimerFinished()
 	
 	if (bTriggerPressed && CurrentWeapon->FireType == EFireType::FullAuto)
 	{
-		Local_FireWeapon();
+		if (CurrentWeapon->Ammo > 0)
+		{
+			Local_FireWeapon();
+		}
 	}
 }
 
 void UCombatComponent::Server_FireWeapon_Implementation(const FHitResult& Hit)
 {
-	Multicast_FireWeapon(Hit);
+	if (!IsValid(CurrentWeapon)) { return; }
+	
+	APawn* OwningPawn = Cast<APawn>(GetOwner());
+	if (GetNetMode() != ENetMode::NM_ListenServer || !OwningPawn->IsLocallyControlled())
+	{
+		// Update ammo count on the server
+		CurrentWeapon->AuthFire();
+	}
+	
+	Multicast_FireWeapon(Hit, CurrentWeapon->Ammo);
 }
 
-void UCombatComponent::Multicast_FireWeapon_Implementation(const FHitResult& Hit)
+void UCombatComponent::Multicast_FireWeapon_Implementation(const FHitResult& Hit, int32 AuthAmmo)
 {
 	APawn* OwningPawn = Cast<APawn>(GetOwner());
 	
 	// Do locally controlled stuff here
 	if (OwningPawn->IsLocallyControlled())
 	{
-		
+		CurrentWeapon->Rep_Fire(AuthAmmo);
 	}
 	
 	// Executes on other machines

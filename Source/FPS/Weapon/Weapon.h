@@ -49,6 +49,18 @@ public:
 	float TraceRadius;
 	
 	void Local_Fire(const FVector& ImpactPoint, const FVector& ImpactNormal, TEnumAsByte<EPhysicalSurface> ImpactSurfaceType, bool bIsFirstPerson);
+	
+	UPROPERTY(EditAnywhere, Category="FPS|Ammo")
+	int32 MagCapacity;
+	
+	UPROPERTY(EditAnywhere, Category="FPS|Ammo")
+	int32 Ammo;
+	
+	UPROPERTY(EditAnywhere, Category="FPS|Ammo")
+	int32 StartingCarriedAmmo;
+	
+	void AuthFire();
+	void Rep_Fire(int32 AuthAmmo);
 
 protected:
 	// Weapon Mesh: first person view
@@ -66,4 +78,7 @@ protected:
 	
 private:
 	void SetMeshVisibilities(APawn* OwningPawn) const;
+	
+	// Used for client-side prediction of ammo
+	int32 Sequence;
 };

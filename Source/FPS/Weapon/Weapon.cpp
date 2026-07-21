@@ -42,6 +42,11 @@ AWeapon::AWeapon()
 	AimFieldOfView = 65.0f;
 	
 	TraceRadius = 5.0f;
+	
+	MagCapacity = 10;
+	Ammo = 5;
+	StartingCarriedAmmo = 10;
+	Sequence = 0;
 }
 
 void AWeapon::OnRep_Instigator()
@@ -157,6 +162,31 @@ void AWeapon::Local_Fire(const FVector& ImpactPoint, const FVector& ImpactNormal
 	}
 	
 	FireEffects(ImpactPoint, ImpactNormal, ImpactSurfaceType, bIsFirstPerson);
+	
+	// Perform ammo prediction
+	if (GetInstigator()->IsLocallyControlled())
+	{
+		Ammo = FMath::Clamp(Ammo - 1, 0, MagCapacity);
+		Sequence += 1;
+	}
+}
+
+void AWeapon::AuthFire()
+{
+	// Executes only on the server
+	// This is the authoritative record of ammo
+	Ammo = FMath::Clamp(Ammo - 1, 0, MagCapacity);
+}
+
+void AWeapon::Rep_Fire(int32 AuthAmmo)
+{
+	// Executed only on client-side
+	if (GetInstigator()->IsLocallyControlled())
+	{
+		Ammo = AuthAmmo;
+		Sequence -= 1;
+		Ammo -= Sequence;
+	}
 }
 
 void AWeapon::SetMeshVisibilities(APawn* OwningPawn) const
