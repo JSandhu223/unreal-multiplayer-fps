@@ -20,7 +20,9 @@ Developed with Unreal Engine 5.8
 
 ### CombatComponent
 
-- Responsible for what happens after the `ShooterCharacter` performs a weapon action.
+- Handles logic after the `ShooterCharacter` performs a weapon action.
+  - Sphere trace for weapon fire.
+  - RPC calls for firing weapon and aiming.
 - Contains a `Weapon` array representing the player inventory.
 - Contains an array of default weapons (set in the blueprint editor), all of which get spawned by the `ShooterCharacter` and get added to the inventory array.
 - Holds a reference to the `CurrentWeapon`.
