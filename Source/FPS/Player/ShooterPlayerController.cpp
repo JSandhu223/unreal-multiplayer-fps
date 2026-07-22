@@ -24,11 +24,19 @@ void AShooterPlayerController::BeginPlay()
 	}
 	
 	// Add overlay to viewport (locally)
-	check(IsValid(ShooterOverlayWidgetClass));
+	if (!ShooterOverlayWidgetClass.IsValid())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("ShooterOverlayWidget class is invalid!"))
+		return;
+	}
+	
 	if (IsLocalController())
 	{
-		ShooterOverlayWidget = CreateWidget<UUserWidget>(this, ShooterOverlayWidgetClass);
-		ShooterOverlayWidget->AddToViewport(0);
+		if (ShooterOverlayWidgetClass.Get() != nullptr)
+		{
+			ShooterOverlayWidget = CreateWidget<UUserWidget>(this, ShooterOverlayWidgetClass.Get());
+			ShooterOverlayWidget->AddToViewport(0);
+		}
 	}
 }
 

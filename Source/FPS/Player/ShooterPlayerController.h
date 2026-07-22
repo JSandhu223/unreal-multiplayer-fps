@@ -23,7 +23,7 @@ protected:
 	virtual void SetupInputComponent() override;
 	
 	UPROPERTY(EditDefaultsOnly, Category="FPS|Widget")
-	TSubclassOf<UUserWidget> ShooterOverlayWidgetClass;
+	TSoftClassPtr<UUserWidget> ShooterOverlayWidgetClass;
 	
 	// This is the reference to the returned widget from CreateWidget()
 	UPROPERTY(VisibleAnywhere, Category="FPS|Widget")
