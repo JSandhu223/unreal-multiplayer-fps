@@ -8,6 +8,8 @@ Developed with Unreal Engine 5.8
 
 - Registers the input mapping context to the local player subsystem.
 - Handles input actions related to basic character movement (i.e. looking around, moving, jumping, crouching).
+- Holds a reference to the main overlay widget to add it to the viewport.
+  - The overlay widget is referenced via a `TSoftClassPtr`, allowing for the widget to be soft referenced. This reduces the size of the widget blueprint as the widget doesn't need to always be loaded in memory of `BP_PlayerController`.
 
 ### ShooterCharacter
 
