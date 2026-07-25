@@ -119,7 +119,7 @@ Developed with Unreal Engine 5.8
 - `Weapon` holds fields needed by the main overlay.
   - Has field `FReticleParams` for holding the reticle parameters. These parameters assist in dynamically adjusting the reticle during gameplay.
   - Has fields `ReticleMaterial` and `AmmoCounterMaterial`. These are set in each respective weapon blueprint.
-  - Has fields `DynMatInst_Reticle` and `DynMatInst_AmmoCounter` which dynamic material instances. These are initially null, so the getters will set these fields by creating a new dynamic instance material based on `ReticleMaterial` and `AmmoCounterMaterial`.
+  - Has fields `DynMatInst_Reticle` and `DynMatInst_AmmoCounter` which store dynamic material instances. These are initially null, so the getters handle setting these fields by creating a new dynamic instance material based on `ReticleMaterial` and `AmmoCounterMaterial`.
 - `CombatComponent` defines multiple delegates for communicating info about the current weapon to the overlay.
   - `OnReticleChanged` sends a broadcast from `UCombatComponent::InitializeWeaponWidgets`, sending the equipped weapon's dynamic material instance, reticle parameters, and a bool indicating if the player is targeting another player.
   - `OnAmmoCounterChanged` also sends a broadcast from `UCombatComponent::InitializeWeaponWidgets`, sending a dynamic material instance, the equipped weapon's current ammo, and the equipped weapon's mag capacity.
@@ -128,3 +128,4 @@ Developed with Unreal Engine 5.8
   - `OnTargetingPlayerStatusChanged` broadcasts a bool whenever the player looks at another player. This is accomplished by a line trace every tick, where the bool only changes when looking at and away from another player.
 - `ShooterReticle` is the c++ widget class that drives the reticle and ammo counter.
   - Binds callbacks to delegates on the `CombatComponent` to receive information on the reticle and ammo counter.
+  - Whenever the possessed pawn changes, the old pawn unbinds from all the delegates and the new pawn binds to all the delegates.
