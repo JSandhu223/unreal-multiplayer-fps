@@ -142,7 +142,7 @@ void AWeapon::WeaponTrace(FHitResult& OutHit, float TraceLength)
 			Start,
 			End,
 			FQuat::Identity,
-			FPSTraceChannel::ECC_Weapon,
+			FPSTraceChannels::ECC_Weapon,
 			FCollisionShape::MakeSphere(TraceRadius),
 			QueryParams,
 			ResponseParams
