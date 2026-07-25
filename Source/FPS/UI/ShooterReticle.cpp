@@ -57,7 +57,7 @@ void UShooterReticle::NativeOnInitialized()
 	}
 	else
 	{
-		ShooterCharacter->OnWeaponFirstReplicated.AddDynamic(this, &ThisClass::UShooterReticle::OnWeaponFirstReplicated);
+		ShooterCharacter->OnWeaponFirstReplicated.AddDynamic(this, &ThisClass::OnWeaponFirstReplicated);
 	}
 	
 	// For hosts (i.e. player on listen server)
