@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GameplayTagContainer.h"
 #include "Components/ActorComponent.h"
 #include "GameFramework/Actor.h"
 #include "ShooterTypes/ShooterTypes.h"
@@ -17,6 +18,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnAmmoCounterChanged, UMaterialI
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnRoundFired, int32, RoundsCurrent, int32, RoundsMax);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAimingStatusChanged, bool, bIsAiming);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTargetingPlayerStatusChanged, bool, bTargeting);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCurrentReserveAmmoChanged, int32, RoundsInReserve, int32, RoundsInWeapon);
 
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
@@ -57,6 +59,9 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FOnTargetingPlayerStatusChanged OnTargetingPlayerStatusChanged;
 	
+	UPROPERTY(BlueprintAssignable)
+	FOnCurrentReserveAmmoChanged OnCurrentReserveAmmoChanged;
+	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="FPS|Weapon")
 	TObjectPtr<UWeaponData> WeaponData;
 	
@@ -69,17 +74,24 @@ public:
 	UPROPERTY(BlueprintReadOnly, Replicated)
 	bool bAiming;
 	
+	bool bHitPlayer;
+	
 	UPROPERTY(Transient, BlueprintReadOnly, ReplicatedUsing=OnRep_CurrentWeapon)
 	TObjectPtr<AWeapon> CurrentWeapon;
 	
 	void InitializeWeaponWidgets() const;
+	
+	UPROPERTY(ReplicatedUsing=OnRep_CurrentReserveAmmo)
+	int32 CurrentReserveAmmo; // for the CurrentWeapon
 	
 protected:
 	UPROPERTY(EditDefaultsOnly, Category="FPS|Weapon")
 	float TraceLength;
 	
 private:
-	bool bHitPlayer;
+	// Authoritative map (updates only on the server)
+	TMap<FGameplayTag, int32> ReserveAmmo;
+	
 	bool bHitPlayerLastFrame;
 	
 	bool bTriggerPressed;
@@ -89,6 +101,9 @@ private:
 	// Called when CurrentWeapon replicates to clients
 	UFUNCTION()
 	void OnRep_CurrentWeapon(AWeapon* LastWeapon);
+	
+	UFUNCTION()
+	void OnRep_CurrentReserveAmmo();
 	
 	UPROPERTY(Transient, Replicated)
 	TArray<AWeapon*> Inventory;

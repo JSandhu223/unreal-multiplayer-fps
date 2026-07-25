@@ -13,7 +13,7 @@ class USpringArmComponent;
 class UCameraComponent;
 
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponFirstReplicated, AWeapon*, Weapon);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnWeaponFirstReplicated, AWeapon*, Weapon, bool, bTargetingPlayer);
 
 
 UCLASS()

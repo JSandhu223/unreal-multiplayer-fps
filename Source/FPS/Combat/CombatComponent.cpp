@@ -33,6 +33,7 @@ void UCombatComponent::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty
 	DOREPLIFETIME(ThisClass, Inventory);
 	DOREPLIFETIME(ThisClass, CurrentWeapon);
 	DOREPLIFETIME_CONDITION(ThisClass, bAiming, COND_SkipOwner);
+	DOREPLIFETIME_CONDITION(ThisClass, CurrentReserveAmmo, COND_OwnerOnly);
 }
 
 void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -227,6 +228,10 @@ void UCombatComponent::Equip(AWeapon* Weapon)
 	CurrentWeapon = Weapon;
 	
 	CurrentWeapon->AttachToOwningPawn();
+	
+	// Broadcast reserve ammo of the equipped weapon
+	CurrentReserveAmmo = ReserveAmmo.FindChecked(Weapon->WeaponType);
+	OnCurrentReserveAmmoChanged.Broadcast(CurrentReserveAmmo, Weapon->Ammo);
 }
 
 void UCombatComponent::SpawnInventory()
@@ -238,6 +243,7 @@ void UCombatComponent::SpawnInventory()
 	{
 		AWeapon* Weapon = SpawnWeapon(WeaponClass);
 		Inventory.AddUnique(Weapon);
+		ReserveAmmo.Add(Weapon->WeaponType, Weapon->StartingCarriedAmmo);
 	}
 	
 	// For now, we just attach the first weapon in our inventory to the owner
@@ -278,6 +284,14 @@ void UCombatComponent::OnRep_CurrentWeapon(AWeapon* LastWeapon)
 	IPlayerInterface::Execute_WeaponReplicated(GetOwner());
 	
 	InitializeWeaponWidgets();
+}
+
+void UCombatComponent::OnRep_CurrentReserveAmmo()
+{
+	if (IsValid(CurrentWeapon))
+	{
+		OnCurrentReserveAmmoChanged.Broadcast(CurrentReserveAmmo, CurrentWeapon->Ammo);
+	}
 }
 
 AWeapon* UCombatComponent::SpawnWeapon(TSubclassOf<AWeapon> WeaponClass) const
