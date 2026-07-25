@@ -126,6 +126,7 @@ Developed with Unreal Engine 5.8
   - `OnRoundFired` broadcasts the equipped weapon's ammo and mag capacity when the local player fires their weapon in `UCombatComponent::Local_FireWeapon`.
   - `OnAimingStatusChanged` broadcasts the aiming status of the local player by sending the variable `bAiming`.
   - `OnTargetingPlayerStatusChanged` broadcasts a bool whenever the player looks at another player. This is accomplished by a line trace every tick, where the bool only changes when looking at and away from another player.
+  - `FOnCurrentReserveAmmoChanged` broadcasts the reserve ammo and current ammo of the equipped weapon whenever `CurrentReserveAmmo` replicates (via RepNotify).
 - `ShooterReticle` is the c++ widget class that drives the reticle and ammo counter.
   - Binds callbacks to delegates on the `CombatComponent` to receive information on the reticle and ammo counter.
   - Whenever the possessed pawn changes, the old pawn unbinds from all the delegates and the new pawn binds to all the delegates.
