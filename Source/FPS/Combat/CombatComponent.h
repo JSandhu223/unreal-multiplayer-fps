@@ -12,7 +12,7 @@ class AWeapon;
 class UWeaponData;
 
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnReticleChanged, UMaterialInstanceDynamic*, ReticleDynMatInst, const FReticleParams&, ReticleParams);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnReticleChanged, UMaterialInstanceDynamic*, ReticleDynMatInst, const FReticleParams&, ReticleParams, bool, bCurrentlyTargetingPlayer);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnAmmoCounterChanged, UMaterialInstanceDynamic*, AmmoCounterDynMatInst, int32, RoundsCurrent, int32, RoundsMax);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnRoundFired, int32, RoundsCurrent, int32, RoundsMax);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAimingStatusChanged, bool, bIsAiming);
@@ -79,6 +79,7 @@ protected:
 	float TraceLength;
 	
 private:
+	bool bHitPlayer;
 	bool bHitPlayerLastFrame;
 	
 	bool bTriggerPressed;
