@@ -7,9 +7,21 @@
 #include "Weapon/Weapon.h"
 
 
+namespace Ammo
+{
+	// These match the names in the Material Instance asset
+	const FName Rounds_Current = FName("Rounds_Current");
+	const FName Rounds_Max = FName("Rounds_Max");
+}
+
+
 void UShooterReticle::NativeOnInitialized()
 {
 	Super::NativeOnInitialized();
+	
+	// Hide the image elements to prevent the player from seeing the default ones in the first few frames
+	Image_Reticle->SetRenderOpacity(0.0f);
+	Image_AmmoCounter->SetRenderOpacity(0.0f);
 	
 	// Bind/subscribe our custom OnPossessedPawnChanged function to the event of the same name.
 	// The event broadcasts to subscribers when the possessed pawn changes. 
@@ -59,14 +71,19 @@ void UShooterReticle::OnPossessedPawnChanged(APawn* OldPawn, APawn* NewPawn)
 	{
 		OldPawnCombat->OnReticleChanged.RemoveDynamic(this, &ThisClass::OnReticleChanged);
 		OldPawnCombat->OnAmmoCounterChanged.RemoveDynamic(this, &ThisClass::OnAmmoCounterChanged);
+		OldPawnCombat->OnRoundFired.RemoveDynamic(this, &ThisClass::OnRoundFired);
 	}
 	
 	// Bind to delegates on the NewPawn's Combat Component
 	UCombatComponent* NewPawnCombat = UCombatComponent::FindCombatComponent(NewPawn);
 	if (IsValid(NewPawnCombat))
 	{
+		Image_Reticle->SetRenderOpacity(1.0f);
+		Image_AmmoCounter->SetRenderOpacity(1.0f);
+		
 		NewPawnCombat->OnReticleChanged.AddDynamic(this, &ThisClass::OnReticleChanged);
 		NewPawnCombat->OnAmmoCounterChanged.AddDynamic(this, &ThisClass::OnAmmoCounterChanged);
+		NewPawnCombat->OnRoundFired.AddDynamic(this, &ThisClass::OnRoundFired);
 	}
 }
 
@@ -83,7 +100,6 @@ void UShooterReticle::OnReticleChanged(UMaterialInstanceDynamic* ReticleDynMatIn
 	
 	FSlateBrush Brush;
 	Brush.SetResourceObject(ReticleDynMatInst);
-	
 	if (IsValid(Image_Reticle))
 	{
 		Image_Reticle->SetBrush(Brush);
@@ -93,13 +109,24 @@ void UShooterReticle::OnReticleChanged(UMaterialInstanceDynamic* ReticleDynMatIn
 void UShooterReticle::OnAmmoCounterChanged(UMaterialInstanceDynamic* AmmoCounterDynMatInst, int32 RoundsCurrent, int32 RoundsMax)
 {
 	// Set the material of the ammo counter widget to the dynamic material instance received from the Combat Component's delegate
+	// as well as the material instance's parameters using RoundsCurrent and RoundsMax
 	CurrentAmmoCounter_DynMatInst = AmmoCounterDynMatInst;
+	CurrentAmmoCounter_DynMatInst->SetScalarParameterValue(Ammo::Rounds_Current, RoundsCurrent);
+	CurrentAmmoCounter_DynMatInst->SetScalarParameterValue(Ammo::Rounds_Max, RoundsMax);
 	
 	FSlateBrush Brush;
 	Brush.SetResourceObject(AmmoCounterDynMatInst);
-	
 	if (IsValid(Image_AmmoCounter))
 	{
 		Image_AmmoCounter->SetBrush(Brush);
+	}
+}
+
+void UShooterReticle::OnRoundFired(int32 RoundsCurrent, int32 RoundsMax)
+{
+	if (CurrentAmmoCounter_DynMatInst.IsValid())
+	{
+		CurrentAmmoCounter_DynMatInst->SetScalarParameterValue(Ammo::Rounds_Current, RoundsCurrent);
+		CurrentAmmoCounter_DynMatInst->SetScalarParameterValue(Ammo::Rounds_Max, RoundsMax);
 	}
 }
