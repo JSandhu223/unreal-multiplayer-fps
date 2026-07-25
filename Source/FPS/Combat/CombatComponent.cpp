@@ -223,7 +223,7 @@ void UCombatComponent::InitializeWeaponWidgets() const
 	if (IsValid(CurrentWeapon))
 	{
 		// Broadcast delegates that will send out the current dynamic material instances
-		OnReticleChanged.Broadcast(CurrentWeapon->GetReticleDynamicMaterialInstance());
+		OnReticleChanged.Broadcast(CurrentWeapon->GetReticleDynamicMaterialInstance(), CurrentWeapon->ReticleParams);
 		OnAmmoCounterChanged.Broadcast(CurrentWeapon->GetAmmoCounterDynamicMaterialInstance(), CurrentWeapon->Ammo, CurrentWeapon->MagCapacity);
 	}
 }

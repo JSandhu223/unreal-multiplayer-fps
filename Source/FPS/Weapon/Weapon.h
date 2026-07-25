@@ -5,6 +5,7 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "GameFramework/Actor.h"
 #include "GameFramework/Pawn.h"
+#include "ShooterTypes/ShooterTypes.h"
 #include "Weapon.generated.h"
 
 
@@ -43,6 +44,9 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="FPS|Fire Type")
 	float FireTime;
+	
+	UPROPERTY(EditDefaultsOnly, Category="FPS|Reticle")
+	FReticleParams ReticleParams;
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="FPS|Aiming")
 	float AimFieldOfView;

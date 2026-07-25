@@ -14,6 +14,12 @@ namespace Ammo
 	const FName Rounds_Max = FName("Rounds_Max");
 }
 
+namespace Reticle
+{
+	const FName RoundedCornerScale = FName("RoundedCornerScale");
+	const FName ShapeCutThickness = FName("ShapeCutThickness");
+}
+
 
 void UShooterReticle::NativeOnInitialized()
 {
@@ -22,6 +28,9 @@ void UShooterReticle::NativeOnInitialized()
 	// Hide the image elements to prevent the player from seeing the default ones in the first few frames
 	Image_Reticle->SetRenderOpacity(0.0f);
 	Image_AmmoCounter->SetRenderOpacity(0.0f);
+	
+	_BaseCornerScaleFactor_RoundFired = 0.0f;
+	_BaseShapeCutFactor_RoundFired = 0.0f;
 	
 	// Bind/subscribe our custom OnPossessedPawnChanged function to the event of the same name.
 	// The event broadcasts to subscribers when the possessed pawn changes. 
@@ -37,7 +46,7 @@ void UShooterReticle::NativeOnInitialized()
 		AWeapon* Weapon = IPlayerInterface::Execute_GetCurrentWeapon(ShooterCharacter);
 		if (IsValid(Weapon))
 		{
-			OnReticleChanged(Weapon->GetReticleDynamicMaterialInstance());
+			OnReticleChanged(Weapon->GetReticleDynamicMaterialInstance(), Weapon->ReticleParams);
 			OnAmmoCounterChanged(Weapon->GetAmmoCounterDynamicMaterialInstance(), Weapon->Ammo, Weapon->MagCapacity);
 		}
 	}
@@ -52,7 +61,7 @@ void UShooterReticle::NativeOnInitialized()
 		AWeapon* Weapon = IPlayerInterface::Execute_GetCurrentWeapon(ShooterCharacter);
 		if (IsValid(Weapon))
 		{
-			OnReticleChanged(Weapon->GetReticleDynamicMaterialInstance());
+			OnReticleChanged(Weapon->GetReticleDynamicMaterialInstance(), Weapon->ReticleParams);
 			OnAmmoCounterChanged(Weapon->GetAmmoCounterDynamicMaterialInstance(), Weapon->Ammo, Weapon->MagCapacity);
 		}
 	}
@@ -61,6 +70,18 @@ void UShooterReticle::NativeOnInitialized()
 void UShooterReticle::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
 	Super::NativeTick(MyGeometry, InDeltaTime);
+	
+	_BaseCornerScaleFactor_RoundFired = FMath::FInterpTo(_BaseCornerScaleFactor_RoundFired, 0.0f, InDeltaTime, CurrentReticleParams.RoundFiredInterpSpeed);
+	_BaseShapeCutFactor_RoundFired = FMath::FInterpTo(_BaseShapeCutFactor_RoundFired, 0.0f, InDeltaTime, CurrentReticleParams.RoundFiredInterpSpeed);
+	
+	BaseCornerScaleFactor = 0.46 + _BaseCornerScaleFactor_RoundFired;
+	BaseShapeCutFactor = -0.7225 + _BaseShapeCutFactor_RoundFired;
+	
+	if (CurrentReticle_DynMatInst.IsValid())
+	{
+		CurrentReticle_DynMatInst->SetScalarParameterValue(Reticle::RoundedCornerScale, BaseCornerScaleFactor);
+		CurrentReticle_DynMatInst->SetScalarParameterValue(Reticle::ShapeCutThickness, BaseShapeCutFactor);
+	}
 }
 
 void UShooterReticle::OnPossessedPawnChanged(APawn* OldPawn, APawn* NewPawn)
@@ -89,12 +110,14 @@ void UShooterReticle::OnPossessedPawnChanged(APawn* OldPawn, APawn* NewPawn)
 
 void UShooterReticle::OnWeaponFirstReplicated(AWeapon* Weapon)
 {
-	OnReticleChanged(Weapon->GetReticleDynamicMaterialInstance());
+	OnReticleChanged(Weapon->GetReticleDynamicMaterialInstance(), Weapon->ReticleParams);
 	OnAmmoCounterChanged(Weapon->GetAmmoCounterDynamicMaterialInstance(), Weapon->Ammo, Weapon->MagCapacity);
 }
 
-void UShooterReticle::OnReticleChanged(UMaterialInstanceDynamic* ReticleDynMatInst)
+void UShooterReticle::OnReticleChanged(UMaterialInstanceDynamic* ReticleDynMatInst, const FReticleParams& ReticleParams)
 {
+	CurrentReticleParams = ReticleParams;
+	
 	// Set the material of the reticle widget to the dynamic material instance received from the Combat Component's delegate
 	CurrentReticle_DynMatInst = ReticleDynMatInst;
 	
@@ -124,6 +147,9 @@ void UShooterReticle::OnAmmoCounterChanged(UMaterialInstanceDynamic* AmmoCounter
 
 void UShooterReticle::OnRoundFired(int32 RoundsCurrent, int32 RoundsMax)
 {
+	_BaseCornerScaleFactor_RoundFired += CurrentReticleParams.ScaleFactor_RoundFired;
+	_BaseShapeCutFactor_RoundFired += CurrentReticleParams.ShapeCutFactor_RoundFired;
+	
 	if (CurrentAmmoCounter_DynMatInst.IsValid())
 	{
 		CurrentAmmoCounter_DynMatInst->SetScalarParameterValue(Ammo::Rounds_Current, RoundsCurrent);

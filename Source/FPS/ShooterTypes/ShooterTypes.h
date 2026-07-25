@@ -9,3 +9,18 @@ enum class ETurningInPlace : uint8
 	Right UMETA(DisplayName="Turning Right"),
 	NotTurning UMETA(DisplayName="Not Turning")
 };
+
+USTRUCT(BlueprintType)
+struct FReticleParams
+{
+	GENERATED_BODY()
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float ShapeCutFactor_RoundFired = 0.0f;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float ScaleFactor_RoundFired = 0.0f;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float RoundFiredInterpSpeed = 20.0f;
+};
