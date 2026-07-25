@@ -39,6 +39,7 @@ public:
 	virtual USkeletalMeshComponent* GetMesh1P_Implementation() const override;
 	virtual USkeletalMeshComponent* GetMesh3P_Implementation() const override;
 	virtual void WeaponReplicated_Implementation() override; // Called by combat component
+	virtual AWeapon* GetCurrentWeapon_Implementation() override;
 	
 	// Fixes the pitch by mapping the range [270, 360] to [-90, 0].
 	UFUNCTION(BlueprintCallable)

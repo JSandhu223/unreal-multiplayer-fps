@@ -2,11 +2,18 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "GameFramework/Actor.h"
 #include "CombatComponent.generated.h"
 
 
+class UMaterialInstanceDynamic;
 class AWeapon;
 class UWeaponData;
+
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnReticleChanged, UMaterialInstanceDynamic*, ReticleDynMatInst);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnAmmoCounterChanged, UMaterialInstanceDynamic*, AmmoCounterDynMatInst, int32, RoundsCurrent, int32, RoundsMax);
+
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class FPS_API UCombatComponent : public UActorComponent
@@ -20,6 +27,9 @@ public:
 	
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	
+	UFUNCTION(BlueprintPure, Category="FPS|Combat")
+	static UCombatComponent* FindCombatComponent(const AActor* Actor);
+	
 	// Cycle to the next weapon in inventory
 	void Initiate_CycleWeapon();
 	void Initiate_ReloadWeapon();
@@ -27,6 +37,12 @@ public:
 	void Initiate_FireWeapon_Released();
 	void Initiate_Aim_Pressed();
 	void Initiate_Aim_Released();
+	
+	UPROPERTY(BlueprintAssignable)
+	FOnReticleChanged OnReticleChanged;
+	
+	UPROPERTY(BlueprintAssignable)
+	FOnAmmoCounterChanged OnAmmoCounterChanged;
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="FPS|Weapon")
 	TObjectPtr<UWeaponData> WeaponData;
@@ -42,6 +58,8 @@ public:
 	
 	UPROPERTY(Transient, BlueprintReadOnly, ReplicatedUsing=OnRep_CurrentWeapon)
 	TObjectPtr<AWeapon> CurrentWeapon;
+	
+	void InitializeWeaponWidgets() const;
 	
 protected:
 	UPROPERTY(EditDefaultsOnly, Category="FPS|Weapon")

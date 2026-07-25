@@ -38,6 +38,11 @@ void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 }
 
+UCombatComponent* UCombatComponent::FindCombatComponent(const AActor* Actor)
+{
+	return IsValid(Actor) ? Actor->FindComponentByClass<UCombatComponent>() : nullptr;
+}
+
 void UCombatComponent::Initiate_CycleWeapon()
 {
 	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Cyan, TEXT("Initiate_CycleWeapon"), false);
@@ -195,6 +200,7 @@ void UCombatComponent::SpawnInventory()
 	if (Inventory.Num() > 0)
 	{
 		Equip(Inventory[0]);
+		InitializeWeaponWidgets();
 	}
 }
 
@@ -209,6 +215,16 @@ void UCombatComponent::DestroyInventory()
 	}
 }
 
+void UCombatComponent::InitializeWeaponWidgets() const
+{
+	if (IsValid(CurrentWeapon))
+	{
+		// Broadcast delegates that will send out the current dynamic material instances
+		OnReticleChanged.Broadcast(CurrentWeapon->GetReticleDynamicMaterialInstance());
+		OnAmmoCounterChanged.Broadcast(CurrentWeapon->GetAmmoCounterDynamicMaterialInstance(), CurrentWeapon->Ammo, CurrentWeapon->MagCapacity);
+	}
+}
+
 void UCombatComponent::OnRep_CurrentWeapon(AWeapon* LastWeapon)
 {
 	if (!IsValid(CurrentWeapon)) { return; }
@@ -216,6 +232,8 @@ void UCombatComponent::OnRep_CurrentWeapon(AWeapon* LastWeapon)
 	CurrentWeapon->AttachToOwningPawn();
 	
 	IPlayerInterface::Execute_WeaponReplicated(GetOwner());
+	
+	InitializeWeaponWidgets();
 }
 
 AWeapon* UCombatComponent::SpawnWeapon(TSubclassOf<AWeapon> WeaponClass) const

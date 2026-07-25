@@ -258,6 +258,11 @@ void AShooterCharacter::WeaponReplicated_Implementation()
 	}
 }
 
+AWeapon* AShooterCharacter::GetCurrentWeapon_Implementation()
+{
+	return Combat->CurrentWeapon;
+}
+
 FRotator AShooterCharacter::GetFixedAimRotation() const
 {
 	FRotator AimRotation = GetBaseAimRotation();
