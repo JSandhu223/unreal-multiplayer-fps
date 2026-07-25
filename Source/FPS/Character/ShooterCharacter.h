@@ -80,7 +80,6 @@ protected:
 	
 	UFUNCTION(BlueprintImplementableEvent)
 	void OnAim(bool bIsAiming);
-
 	
 private:
 	void CalculateFABRIKSocketTransform();

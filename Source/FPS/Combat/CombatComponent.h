@@ -15,6 +15,7 @@ class UWeaponData;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnReticleChanged, UMaterialInstanceDynamic*, ReticleDynMatInst, const FReticleParams&, ReticleParams);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnAmmoCounterChanged, UMaterialInstanceDynamic*, AmmoCounterDynMatInst, int32, RoundsCurrent, int32, RoundsMax);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnRoundFired, int32, RoundsCurrent, int32, RoundsMax);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAimingStatusChanged, bool, bIsAiming);
 
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
@@ -48,6 +49,9 @@ public:
 	
 	UPROPERTY(BlueprintAssignable)
 	FOnRoundFired OnRoundFired;
+	
+	UPROPERTY(BlueprintAssignable)
+	FOnAimingStatusChanged OnAimingStatusChanged;
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="FPS|Weapon")
 	TObjectPtr<UWeaponData> WeaponData;
