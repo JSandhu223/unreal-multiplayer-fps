@@ -73,6 +73,7 @@ Developed with Unreal Engine 5.8
 ### ShooterTypes
 
 - Contains an enum `ETurningInPlace` which helps with the turn in place logic for the third person animations.
+- Contains an enum `FReticleParams` which holds floats that dynamically adjust the reticle during gameplay.
 
 ## Multiplayer
 
@@ -111,3 +112,19 @@ Developed with Unreal Engine 5.8
       - `TurningStatus`: Tells whether the character has turned past the left/right threshold.
       - `MovementOffsetYaw`: The delta between the character's movement rotation and aim rotation. This is used to drive the standing and crouching 1D blendspaces.
     - `ABP_ThirdPerson` uses the `NegatedAO_Yaw` from the `ShooterCharacter` as the *orientation angle* input to the **Orientation Warping** node. This allows the upper body to rotate while keeping the lower body in place.
+
+## UI
+
+- The main overlay for our game is `WBP_ShooterOverlay` and houses all other widgets in its canvas. It is created and added to the viewport by the `ShooterPlayerController`.
+- `Weapon` holds fields needed by the main overlay.
+  - Has field `FReticleParams` for holding the reticle parameters. These parameters assist in dynamically adjusting the reticle during gameplay.
+  - Has fields `ReticleMaterial` and `AmmoCounterMaterial`. These are set in each respective weapon blueprint.
+  - Has fields `DynMatInst_Reticle` and `DynMatInst_AmmoCounter` which dynamic material instances. These are initially null, so the getters will set these fields by creating a new dynamic instance material based on `ReticleMaterial` and `AmmoCounterMaterial`.
+- `CombatComponent` defines multiple delegates for communicating info about the current weapon to the overlay.
+  - `OnReticleChanged` sends a broadcast from `UCombatComponent::InitializeWeaponWidgets`, sending the equipped weapon's dynamic material instance, reticle parameters, and a bool indicating if the player is targeting another player.
+  - `OnAmmoCounterChanged` also sends a broadcast from `UCombatComponent::InitializeWeaponWidgets`, sending a dynamic material instance, the equipped weapon's current ammo, and the equipped weapon's mag capacity.
+  - `OnRoundFired` broadcasts the equipped weapon's ammo and mag capacity when the local player fires their weapon in `UCombatComponent::Local_FireWeapon`.
+  - `OnAimingStatusChanged` broadcasts the aiming status of the local player by sending the variable `bAiming`.
+  - `OnTargetingPlayerStatusChanged` broadcasts a bool whenever the player looks at another player. This is accomplished by a line trace every tick, where the bool only changes when looking at and away from another player.
+- `ShooterReticle` is the c++ widget class that drives the reticle and ammo counter.
+  - Binds callbacks to delegates on the `CombatComponent` to receive information on the reticle and ammo counter.
