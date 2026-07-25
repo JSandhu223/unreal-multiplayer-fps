@@ -8,6 +8,8 @@ Developed with Unreal Engine 5.8
 
 - Registers the input mapping context to the local player subsystem.
 - Handles input actions related to basic character movement (i.e. looking around, moving, jumping, crouching).
+- Holds a reference to the main overlay widget to add it to the viewport.
+  - The overlay widget is referenced via a `TSoftClassPtr`, allowing for the widget to be soft referenced. This reduces the size of the widget blueprint as the widget doesn't need to always be loaded in memory of `BP_PlayerController`.
 
 ### ShooterCharacter
 
@@ -71,6 +73,7 @@ Developed with Unreal Engine 5.8
 ### ShooterTypes
 
 - Contains an enum `ETurningInPlace` which helps with the turn in place logic for the third person animations.
+- Contains an enum `FReticleParams` which holds floats that dynamically adjust the reticle during gameplay.
 
 ## Multiplayer
 
@@ -81,6 +84,18 @@ Developed with Unreal Engine 5.8
 - The `CombatComponent` has a `bAiming` boolean variable that is registered for replication. When it updates, a server RPC is called, which updates the value of this variable on the server, which in turn replicates it down to all clients.
 - The `CombatComponent` handles first person weapon animations locally. Third person weapon animations are handled in the multicast RPC. The order of execution is as follows:
   - `Local_FireWeapon` -> `Server_FireWeapon` -> `Multicast_FireWeapon`
+- A client-side prediction algorithm is used to track ammo for each player. The algorithm tracks both an `Ammo` and `Sequence` variable to ensure the server and client stay in sync with their ammo counts. This is necessary since the server holds the authority on the ammo count in order to prevent clients from cheating. For the case of a client on a dedicated server, the algorithm runs as follows:
+  - `Ammo` and `Sequence` are initialized.
+  - When player presses input key bound to the Fire action, `UCombatComponent::Initiate_FireWeapon_Pressed` is called.
+  - `UCombatComponent::Initiate_FireWeapon_Pressed` calls `UCombatComponent::Local_FireWeapon`, which in turn calls `AWeapon::Local_Fire` to decrement the `Ammo` and increment the `Sequence`.
+  - After returning from `AWeapon::Local_Fire`, `UCombatComponent` calls the server RPC `UCombatComponent::Server_FireWeapon`, which is a function that only executes on the server. Then only if the combat component's owner is not on a listen server or is not locally controlled, a call to `AWeapon::AuthFire` is made, which just decrements the `Ammo`. Here we can `Ammo` the `AuthAmmo` (the authoritative ammo). Note that `AWeapon::AuthFire` will never be called for a player on a listen server, since they themselves are the authority!
+  - A call is made to the multicast RPC `UCombatComponent::Multicast_FireWeapon`.
+  - `UCombatComponent::Multicast_FireWeapon` makes a call to `AWeapon::Rep_Fire` which performs the following steps:
+    ```
+    Ammo = AuthAmmo
+    Sequence = Sequence - 1
+    Ammo = Ammo - Sequence
+    ```
 
 ## Animation
 
@@ -97,3 +112,20 @@ Developed with Unreal Engine 5.8
       - `TurningStatus`: Tells whether the character has turned past the left/right threshold.
       - `MovementOffsetYaw`: The delta between the character's movement rotation and aim rotation. This is used to drive the standing and crouching 1D blendspaces.
     - `ABP_ThirdPerson` uses the `NegatedAO_Yaw` from the `ShooterCharacter` as the *orientation angle* input to the **Orientation Warping** node. This allows the upper body to rotate while keeping the lower body in place.
+
+## UI
+
+- The main overlay for our game is `WBP_ShooterOverlay` and houses all other widgets in its canvas. It is created and added to the viewport by the `ShooterPlayerController`.
+- `Weapon` holds fields needed by the main overlay.
+  - Has field `FReticleParams` for holding the reticle parameters. These parameters assist in dynamically adjusting the reticle during gameplay.
+  - Has fields `ReticleMaterial` and `AmmoCounterMaterial`. These are set in each respective weapon blueprint.
+  - Has fields `DynMatInst_Reticle` and `DynMatInst_AmmoCounter` which store dynamic material instances. These are initially null, so the getters handle setting these fields by creating a new dynamic instance material based on `ReticleMaterial` and `AmmoCounterMaterial`.
+- `CombatComponent` defines multiple delegates for communicating info about the current weapon to the overlay.
+  - `OnReticleChanged` sends a broadcast from `UCombatComponent::InitializeWeaponWidgets`, sending the equipped weapon's dynamic material instance, reticle parameters, and a bool indicating if the player is targeting another player.
+  - `OnAmmoCounterChanged` also sends a broadcast from `UCombatComponent::InitializeWeaponWidgets`, sending a dynamic material instance, the equipped weapon's current ammo, and the equipped weapon's mag capacity.
+  - `OnRoundFired` broadcasts the equipped weapon's ammo and mag capacity when the local player fires their weapon in `UCombatComponent::Local_FireWeapon`.
+  - `OnAimingStatusChanged` broadcasts the aiming status of the local player by sending the variable `bAiming`.
+  - `OnTargetingPlayerStatusChanged` broadcasts a bool whenever the player looks at another player. This is accomplished by a line trace every tick, where the bool only changes when looking at and away from another player.
+- `ShooterReticle` is the c++ widget class that drives the reticle and ammo counter.
+  - Binds callbacks to delegates on the `CombatComponent` to receive information on the reticle and ammo counter.
+  - Whenever the possessed pawn changes, the old pawn unbinds from all the delegates and the new pawn binds to all the delegates.

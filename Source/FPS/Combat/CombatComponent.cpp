@@ -1,5 +1,6 @@
 #include "CombatComponent.h"
 
+#include "FPS.h"
 #include "TimerManager.h"
 #include "Animation/AnimInstance.h"
 #include "Character/ShooterCharacter.h"
@@ -8,6 +9,7 @@
 #include "Engine/Engine.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/Pawn.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "Net/UnrealNetwork.h"
 #include "PhysicalMaterials/PhysicalMaterial.h"
 #include "Weapon/Weapon.h"
@@ -36,6 +38,47 @@ void UCombatComponent::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty
 void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+	
+	APawn* OwningPawn = Cast<APawn>(GetOwner());
+	if (!IsValid(OwningPawn) || !OwningPawn->IsLocallyControlled()) { return; }
+	
+	APlayerController* PC = Cast<APlayerController>(OwningPawn->GetController());
+	if (!IsValid(PC)) { return; }
+	
+	FVector EyesWorldLocation;
+	FRotator EyesWorldRotation;
+	PC->GetActorEyesViewPoint(EyesWorldLocation, EyesWorldRotation);
+	const FVector EyesWorldDirection = UKismetMathLibrary::GetForwardVector(EyesWorldRotation);
+	
+	const FVector Start = EyesWorldLocation;
+	const FVector End = Start + (EyesWorldDirection * TraceLength);
+	
+	FHitResult Hit;
+	
+	FCollisionQueryParams QueryParams;
+	QueryParams.AddIgnoredActor(GetOwner());
+	
+	FCollisionResponseParams ResponseParams;
+	ResponseParams.CollisionResponse.SetAllChannels(ECollisionResponse::ECR_Ignore);
+	ResponseParams.CollisionResponse.SetResponse(ECollisionChannel::ECC_Pawn, ECR_Block);
+	ResponseParams.CollisionResponse.SetResponse(ECollisionChannel::ECC_PhysicsBody, ECR_Block);
+	
+	GetWorld()->LineTraceSingleByChannel(Hit, Start, End, FPSTraceChannels::ECC_Weapon, QueryParams, ResponseParams);
+	
+	bHitPlayer = IsValid(Hit.GetActor()) && Hit.GetActor()->Implements<UPlayerInterface>();
+	
+	if (bHitPlayer != bHitPlayerLastFrame)
+	{
+		// Broadcast
+		OnTargetingPlayerStatusChanged.Broadcast(bHitPlayer);
+	}
+	
+	bHitPlayerLastFrame = bHitPlayer;
+}
+
+UCombatComponent* UCombatComponent::FindCombatComponent(const AActor* Actor)
+{
+	return IsValid(Actor) ? Actor->FindComponentByClass<UCombatComponent>() : nullptr;
 }
 
 void UCombatComponent::Initiate_CycleWeapon()
@@ -50,9 +93,18 @@ void UCombatComponent::Initiate_ReloadWeapon()
 
 void UCombatComponent::Initiate_FireWeapon_Pressed()
 {
+	if (!IsValid(CurrentWeapon)) { return; }
+	
 	bTriggerPressed = true;
 	
-	Local_FireWeapon();
+	if (CurrentWeapon->Ammo > 0)
+	{
+		Local_FireWeapon();
+	}
+	else
+	{
+		// Optional: implement "dry fire" animation on BP_Weapon to signify to the player that they are out of ammo
+	}
 }
 
 void UCombatComponent::Local_FireWeapon()
@@ -60,6 +112,7 @@ void UCombatComponent::Local_FireWeapon()
 	if (!IsValid(CurrentWeapon)) { return; }
 	
 	ensure(IsValid(WeaponData));
+	
 	// play the fire weapon montage for the first person mesh
 	UAnimMontage* Montage1P = WeaponData->FirstPersonMontages.FindChecked(CurrentWeapon->WeaponType).FireMontage;
 	USkeletalMeshComponent* Mesh1P = IPlayerInterface::Execute_GetMesh1P(GetOwner());
@@ -75,6 +128,9 @@ void UCombatComponent::Local_FireWeapon()
 	EPhysicalSurface ImpactSurfaceType = Hit.PhysMaterial.IsValid(false) ? Hit.PhysMaterial->SurfaceType.GetValue() : EPhysicalSurface::SurfaceType1;
 	CurrentWeapon->Local_Fire(Hit.ImpactPoint, Hit.ImpactNormal, ImpactSurfaceType, true);
 	
+	// Broadcast delegate to update ammo counter widget
+	OnRoundFired.Broadcast(CurrentWeapon->Ammo, CurrentWeapon->MagCapacity);
+	
 	GetWorld()->GetTimerManager().SetTimer(FireTimer, this, &ThisClass::FireTimerFinished, CurrentWeapon->FireTime);
 	
 	Server_FireWeapon(Hit);
@@ -86,23 +142,35 @@ void UCombatComponent::FireTimerFinished()
 	
 	if (bTriggerPressed && CurrentWeapon->FireType == EFireType::FullAuto)
 	{
-		Local_FireWeapon();
+		if (CurrentWeapon->Ammo > 0)
+		{
+			Local_FireWeapon();
+		}
 	}
 }
 
 void UCombatComponent::Server_FireWeapon_Implementation(const FHitResult& Hit)
 {
-	Multicast_FireWeapon(Hit);
+	if (!IsValid(CurrentWeapon)) { return; }
+	
+	APawn* OwningPawn = Cast<APawn>(GetOwner());
+	if (GetNetMode() != ENetMode::NM_ListenServer || !OwningPawn->IsLocallyControlled())
+	{
+		// Update ammo count on the server
+		CurrentWeapon->AuthFire();
+	}
+	
+	Multicast_FireWeapon(Hit, CurrentWeapon->Ammo);
 }
 
-void UCombatComponent::Multicast_FireWeapon_Implementation(const FHitResult& Hit)
+void UCombatComponent::Multicast_FireWeapon_Implementation(const FHitResult& Hit, int32 AuthAmmo)
 {
 	APawn* OwningPawn = Cast<APawn>(GetOwner());
 	
 	// Do locally controlled stuff here
 	if (OwningPawn->IsLocallyControlled())
 	{
-		
+		CurrentWeapon->Rep_Fire(AuthAmmo);
 	}
 	
 	// Executes on other machines
@@ -148,6 +216,9 @@ void UCombatComponent::Server_Aim_Implementation(bool bPressed)
 void UCombatComponent::Local_Aim(bool bPressed)
 {
 	bAiming = bPressed;
+	
+	// Broadcast to ShooterReticle
+	OnAimingStatusChanged.Broadcast(bAiming); 
 }
 
 void UCombatComponent::Equip(AWeapon* Weapon)
@@ -173,6 +244,7 @@ void UCombatComponent::SpawnInventory()
 	if (Inventory.Num() > 0)
 	{
 		Equip(Inventory[0]);
+		InitializeWeaponWidgets();
 	}
 }
 
@@ -187,11 +259,25 @@ void UCombatComponent::DestroyInventory()
 	}
 }
 
+void UCombatComponent::InitializeWeaponWidgets() const
+{
+	if (IsValid(CurrentWeapon))
+	{
+		// Broadcast delegates that will send out the current dynamic material instances
+		OnReticleChanged.Broadcast(CurrentWeapon->GetReticleDynamicMaterialInstance(), CurrentWeapon->ReticleParams, bHitPlayer);
+		OnAmmoCounterChanged.Broadcast(CurrentWeapon->GetAmmoCounterDynamicMaterialInstance(), CurrentWeapon->Ammo, CurrentWeapon->MagCapacity);
+	}
+}
+
 void UCombatComponent::OnRep_CurrentWeapon(AWeapon* LastWeapon)
 {
 	if (!IsValid(CurrentWeapon)) { return; }
 	
 	CurrentWeapon->AttachToOwningPawn();
+	
+	IPlayerInterface::Execute_WeaponReplicated(GetOwner());
+	
+	InitializeWeaponWidgets();
 }
 
 AWeapon* UCombatComponent::SpawnWeapon(TSubclassOf<AWeapon> WeaponClass) const

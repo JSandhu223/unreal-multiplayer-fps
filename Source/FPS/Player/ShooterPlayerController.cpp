@@ -2,6 +2,7 @@
 
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "Blueprint/UserWidget.h"
 #include "Engine/LocalPlayer.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -20,6 +21,22 @@ void AShooterPlayerController::BeginPlay()
 	if (IsValid(Subsystem))
 	{
 		Subsystem->AddMappingContext(ShooterIMC, 0);
+	}
+	
+	// Add overlay to viewport (locally)
+	if (!ShooterOverlayWidgetClass.IsValid())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("ShooterOverlayWidget class is invalid!"))
+		return;
+	}
+	
+	if (IsLocalController())
+	{
+		if (ShooterOverlayWidgetClass.Get() != nullptr)
+		{
+			ShooterOverlayWidget = CreateWidget<UUserWidget>(this, ShooterOverlayWidgetClass.Get());
+			ShooterOverlayWidget->AddToViewport(0);
+		}
 	}
 }
 

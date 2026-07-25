@@ -5,6 +5,7 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "GameFramework/Actor.h"
 #include "GameFramework/Pawn.h"
+#include "ShooterTypes/ShooterTypes.h"
 #include "Weapon.generated.h"
 
 
@@ -26,8 +27,10 @@ public:
 	virtual void OnRep_Instigator() override;
 	
 	USkeletalMeshComponent* GetMesh1P() const;
-	
 	USkeletalMeshComponent* GetMesh3P() const;
+	
+	UMaterialInstanceDynamic* GetReticleDynamicMaterialInstance();
+	UMaterialInstanceDynamic* GetAmmoCounterDynamicMaterialInstance();
 	
 	void AttachToOwningPawn() const;
 	
@@ -42,6 +45,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="FPS|Fire Type")
 	float FireTime;
 	
+	UPROPERTY(EditDefaultsOnly, Category="FPS|Reticle")
+	FReticleParams ReticleParams;
+	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="FPS|Aiming")
 	float AimFieldOfView;
 	
@@ -49,6 +55,18 @@ public:
 	float TraceRadius;
 	
 	void Local_Fire(const FVector& ImpactPoint, const FVector& ImpactNormal, TEnumAsByte<EPhysicalSurface> ImpactSurfaceType, bool bIsFirstPerson);
+	
+	UPROPERTY(EditAnywhere, Category="FPS|Ammo")
+	int32 MagCapacity;
+	
+	UPROPERTY(EditAnywhere, Category="FPS|Ammo")
+	int32 Ammo;
+	
+	UPROPERTY(EditAnywhere, Category="FPS|Ammo")
+	int32 StartingCarriedAmmo;
+	
+	void AuthFire();
+	void Rep_Fire(int32 AuthAmmo);
 
 protected:
 	// Weapon Mesh: first person view
@@ -66,4 +84,19 @@ protected:
 	
 private:
 	void SetMeshVisibilities(APawn* OwningPawn) const;
+	
+	// Used for client-side prediction of ammo
+	int32 Sequence;
+	
+	UPROPERTY(EditDefaultsOnly, Category="FPS|Weapon")
+	TObjectPtr<UMaterialInterface> ReticleMaterial;
+	
+	UPROPERTY(EditDefaultsOnly, Category="FPS|Weapon")
+	TObjectPtr<UMaterialInterface> AmmoCounterMaterial;
+	
+	UPROPERTY(VisibleAnywhere, Category="FPS|Weapon")
+	TObjectPtr<UMaterialInstanceDynamic> DynMatInst_Reticle;
+	
+	UPROPERTY(VisibleAnywhere, Category="FPS|Weapon")
+	TObjectPtr<UMaterialInstanceDynamic> DynMatInst_AmmoCounter;
 };

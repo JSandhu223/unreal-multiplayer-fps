@@ -61,6 +61,8 @@ AShooterCharacter::AShooterCharacter()
 	
 	StartingAimRotation = FRotator::ZeroRotator;
 	TurningStatus = ETurningInPlace::NotTurning;
+	
+	bWeaponFirstReplicated = false;
 }
 
 void AShooterCharacter::BeginPlay()
@@ -89,6 +91,14 @@ void AShooterCharacter::PossessedBy(AController* NewController)
 	check(Combat);
 	
 	Combat->SpawnInventory();
+}
+
+void AShooterCharacter::OnRep_PlayerState()
+{
+	if (IsValid(Combat))
+	{
+		Combat->InitializeWeaponWidgets();
+	}
 }
 
 void AShooterCharacter::Tick(float DeltaTime)
@@ -245,6 +255,20 @@ USkeletalMeshComponent* AShooterCharacter::GetMesh1P_Implementation() const
 USkeletalMeshComponent* AShooterCharacter::GetMesh3P_Implementation() const
 {
 	return GetMesh();
+}
+
+void AShooterCharacter::WeaponReplicated_Implementation()
+{
+	if (!bWeaponFirstReplicated)
+	{
+		bWeaponFirstReplicated = true;
+		OnWeaponFirstReplicated.Broadcast(Combat->CurrentWeapon);
+	}
+}
+
+AWeapon* AShooterCharacter::GetCurrentWeapon_Implementation()
+{
+	return Combat->CurrentWeapon;
 }
 
 FRotator AShooterCharacter::GetFixedAimRotation() const
