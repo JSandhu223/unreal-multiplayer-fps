@@ -93,6 +93,14 @@ void AShooterCharacter::PossessedBy(AController* NewController)
 	Combat->SpawnInventory();
 }
 
+void AShooterCharacter::OnRep_PlayerState()
+{
+	if (IsValid(Combat))
+	{
+		Combat->InitializeWeaponWidgets();
+	}
+}
+
 void AShooterCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);

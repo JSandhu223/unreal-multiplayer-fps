@@ -34,6 +34,8 @@ public:
 	
 	virtual void PossessedBy(AController* NewController) override;
 	
+	virtual void OnRep_PlayerState() override;
+	
 	/** PlayerInterface*/
 	virtual FName GetWeaponAttachPoint_Implementation(const FGameplayTag& WeaponType) const override;
 	virtual USkeletalMeshComponent* GetMesh1P_Implementation() const override;

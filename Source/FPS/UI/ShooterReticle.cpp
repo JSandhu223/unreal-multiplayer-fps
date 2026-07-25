@@ -2,6 +2,8 @@
 
 #include "Character/ShooterCharacter.h"
 #include "Combat/CombatComponent.h"
+#include "Components/Image.h"
+#include "Materials/MaterialInstanceDynamic.h"
 #include "Weapon/Weapon.h"
 
 
@@ -30,6 +32,17 @@ void UShooterReticle::NativeOnInitialized()
 	else
 	{
 		ShooterCharacter->OnWeaponFirstReplicated.AddDynamic(this, &ThisClass::UShooterReticle::OnWeaponFirstReplicated);
+	}
+	
+	// For hosts (i.e. player on listen server)
+	if (ShooterCharacter->HasAuthority())
+	{
+		AWeapon* Weapon = IPlayerInterface::Execute_GetCurrentWeapon(ShooterCharacter);
+		if (IsValid(Weapon))
+		{
+			OnReticleChanged(Weapon->GetReticleDynamicMaterialInstance());
+			OnAmmoCounterChanged(Weapon->GetAmmoCounterDynamicMaterialInstance(), Weapon->Ammo, Weapon->MagCapacity);
+		}
 	}
 }
 
@@ -66,10 +79,27 @@ void UShooterReticle::OnWeaponFirstReplicated(AWeapon* Weapon)
 void UShooterReticle::OnReticleChanged(UMaterialInstanceDynamic* ReticleDynMatInst)
 {
 	// Set the material of the reticle widget to the dynamic material instance received from the Combat Component's delegate
+	CurrentReticle_DynMatInst = ReticleDynMatInst;
+	
+	FSlateBrush Brush;
+	Brush.SetResourceObject(ReticleDynMatInst);
+	
+	if (IsValid(Image_Reticle))
+	{
+		Image_Reticle->SetBrush(Brush);
+	}
 }
 
-void UShooterReticle::OnAmmoCounterChanged(UMaterialInstanceDynamic* AmmoCounterDynMatInst, int32 RoundsCurrent,
-	int32 RoundsMax)
+void UShooterReticle::OnAmmoCounterChanged(UMaterialInstanceDynamic* AmmoCounterDynMatInst, int32 RoundsCurrent, int32 RoundsMax)
 {
 	// Set the material of the ammo counter widget to the dynamic material instance received from the Combat Component's delegate
+	CurrentAmmoCounter_DynMatInst = AmmoCounterDynMatInst;
+	
+	FSlateBrush Brush;
+	Brush.SetResourceObject(AmmoCounterDynMatInst);
+	
+	if (IsValid(Image_AmmoCounter))
+	{
+		Image_AmmoCounter->SetBrush(Brush);
+	}
 }

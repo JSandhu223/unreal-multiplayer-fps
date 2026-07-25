@@ -23,7 +23,7 @@ public:
 	TObjectPtr<UImage> Image_Reticle;
 	
 	UPROPERTY(meta=(BindWidget))
-	TObjectPtr<UImage> Image_Counter;
+	TObjectPtr<UImage> Image_AmmoCounter;
 	
 private:
 	TWeakObjectPtr<UMaterialInstanceDynamic> CurrentReticle_DynMatInst;
