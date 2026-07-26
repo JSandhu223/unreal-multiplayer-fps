@@ -18,7 +18,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnAmmoCounterChanged, UMaterialI
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnRoundFired, int32, RoundsCurrent, int32, RoundsMax, int32, RoundsInReserve);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAimingStatusChanged, bool, bIsAiming);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTargetingPlayerStatusChanged, bool, bTargeting);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCurrentReserveAmmoChanged, int32, RoundsInReserve, int32, RoundsInWeapon);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnCurrentReserveAmmoChanged, int32, RoundsInReserve, int32, RoundsInWeapon, UMaterialInterface*, WeaponIconMaterial);
 
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))

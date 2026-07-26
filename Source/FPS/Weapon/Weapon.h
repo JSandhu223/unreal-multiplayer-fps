@@ -48,6 +48,9 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category="FPS|Reticle")
 	FReticleParams ReticleParams;
 	
+	UPROPERTY(EditDefaultsOnly, Category="FPS|Icon")
+	TObjectPtr<UMaterialInterface> WeaponIcon;
+	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="FPS|Aiming")
 	float AimFieldOfView;
 	
