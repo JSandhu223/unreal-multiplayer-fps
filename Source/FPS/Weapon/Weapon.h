@@ -43,6 +43,8 @@ public:
 	
 	void AttachToOwningPawn(APawn* Pawn) const;
 	
+	void DetachFromOwningPawn();
+	
 	void WeaponTrace(FHitResult& OutHit, float TraceLength);
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="FPS|Weapon Type")

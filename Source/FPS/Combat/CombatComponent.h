@@ -68,8 +68,13 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="FPS|Weapon")
 	TObjectPtr<UWeaponData> WeaponData;
 	
-	// Called only on the server
+	// (Old) Called only on the server
 	void Equip(AWeapon* Weapon);
+	
+	UFUNCTION(Server, Reliable)
+	void Server_EquipWeapon(AWeapon* Weapon);
+	
+	void Local_EquipWeapon(AWeapon* Weapon);
 	
 	void SpawnInventory();
 	void DestroyInventory();
@@ -130,6 +135,8 @@ private:
 	void Server_CycleWeapon(int32 WeaponIndex);
 	
 	void Local_CycleWeapon(int32 WeaponIndex);
+	
+	void SetCurrentWeapon(AWeapon* NewWeapon, AWeapon* LastWeapon);
 	
 	// Server RPC for letting server and other clients know when a client is aiming their weapon
 	UFUNCTION(Server, Reliable)
