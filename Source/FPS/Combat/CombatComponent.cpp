@@ -3,6 +3,7 @@
 #include "FPS.h"
 #include "TimerManager.h"
 #include "Animation/AnimInstance.h"
+#include "Animation/AnimMontage.h"
 #include "Character/ShooterCharacter.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Data/WeaponData.h"
@@ -24,6 +25,8 @@ UCombatComponent::UCombatComponent()
 	bAiming = false;
 	
 	bTriggerPressed = false;
+	
+	LocalWeaponIndex = 0;
 }
 
 void UCombatComponent::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
@@ -84,7 +87,55 @@ UCombatComponent* UCombatComponent::FindCombatComponent(const AActor* Actor)
 
 void UCombatComponent::Initiate_CycleWeapon()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Cyan, TEXT("Initiate_CycleWeapon"), false);
+	if (!IsValid(CurrentWeapon)) { return; }
+	
+	// Prevent player from cycling weapon if they are already cycling
+	if (CurrentWeapon->WeaponStatus == EWeaponStatus::Cycling) { return; }
+	
+	AdvanceWeaponIndex();
+	Local_CycleWeapon(LocalWeaponIndex);
+}
+
+void UCombatComponent::Local_CycleWeapon(int32 WeaponIndex)
+{
+	AWeapon* NextWeapon = Inventory[WeaponIndex];
+	if (!IsValid(NextWeapon) || !IsValid(WeaponData)) { return; }
+	CurrentWeapon->WeaponStatus = EWeaponStatus::Cycling;
+	NextWeapon->WeaponStatus = EWeaponStatus::Cycling;
+	
+	APawn* OwningPawn = Cast<APawn>(GetOwner());
+	const bool bIsLocal = IsValid(OwningPawn) && OwningPawn->IsLocallyControlled();
+	
+	// If local plauer then play 1P montage, otherwise play 3P montage
+	const FMontageData& MontageData = bIsLocal ? WeaponData->FirstPersonMontages.FindChecked(NextWeapon->WeaponType) : WeaponData->ThirdPersonMontages.FindChecked(NextWeapon->WeaponType);
+	USkeletalMeshComponent* Mesh = bIsLocal ? IPlayerInterface::Execute_GetMesh1P(GetOwner()) : IPlayerInterface::Execute_GetMesh3P(GetOwner());
+	if (IsValid(Mesh) && IsValid(MontageData.EquipMontage))
+	{
+		Mesh->GetAnimInstance()->Montage_Play(MontageData.EquipMontage);
+	}
+	
+	if (bIsLocal)
+	{
+		Server_CycleWeapon(WeaponIndex);
+	}
+}
+
+void UCombatComponent::Server_CycleWeapon_Implementation(int32 WeaponIndex)
+{
+	LocalWeaponIndex = WeaponIndex;
+	Multicast_CycleWeapon(WeaponIndex);
+}
+
+void UCombatComponent::Multicast_CycleWeapon_Implementation(int32 WeaponIndex)
+{
+	APawn* OwningPawn = Cast<APawn>(GetOwner());
+	if (!IsValid(OwningPawn)) { return; }
+	
+	if (!OwningPawn->IsLocallyControlled())
+	{
+		LocalWeaponIndex = WeaponIndex;
+		Local_CycleWeapon(WeaponIndex);
+	}
 }
 
 void UCombatComponent::Initiate_ReloadWeapon()
@@ -227,7 +278,7 @@ void UCombatComponent::Equip(AWeapon* Weapon)
 	// Setting CurrentWeapon causes it to replicate and trigger the rep notify on the client(s)
 	CurrentWeapon = Weapon;
 	
-	CurrentWeapon->AttachToOwningPawn();
+	CurrentWeapon->AttachToOwningPawn(Cast<APawn>(GetOwner()));
 	
 	// Broadcast reserve ammo of the equipped weapon
 	CurrentReserveAmmo = ReserveAmmo.FindChecked(Weapon->WeaponType);
@@ -279,7 +330,7 @@ void UCombatComponent::OnRep_CurrentWeapon(AWeapon* LastWeapon)
 {
 	if (!IsValid(CurrentWeapon)) { return; }
 	
-	CurrentWeapon->AttachToOwningPawn();
+	CurrentWeapon->AttachToOwningPawn(Cast<APawn>(GetOwner()));
 	
 	IPlayerInterface::Execute_WeaponReplicated(GetOwner());
 	
@@ -292,6 +343,16 @@ void UCombatComponent::OnRep_CurrentReserveAmmo()
 	{
 		OnCurrentReserveAmmoChanged.Broadcast(CurrentReserveAmmo, CurrentWeapon->Ammo, CurrentWeapon->WeaponIcon);
 	}
+}
+
+int32 UCombatComponent::AdvanceWeaponIndex()
+{
+	if (Inventory.Num() >= 2)
+	{
+		LocalWeaponIndex = (LocalWeaponIndex +  1) % Inventory.Num();
+	}
+	
+	return LocalWeaponIndex;
 }
 
 AWeapon* UCombatComponent::SpawnWeapon(TSubclassOf<AWeapon> WeaponClass) const

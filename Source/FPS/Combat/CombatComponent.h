@@ -105,6 +105,10 @@ private:
 	UFUNCTION()
 	void OnRep_CurrentReserveAmmo();
 	
+	int32 LocalWeaponIndex;
+	
+	int32 AdvanceWeaponIndex();
+	
 	UPROPERTY(Transient, Replicated)
 	TArray<AWeapon*> Inventory;
 	
@@ -112,6 +116,14 @@ private:
 	TArray<TSubclassOf<AWeapon>> DefaultWeaponClasses;
 	
 	AWeapon* SpawnWeapon(TSubclassOf<AWeapon> WeaponClass) const;
+	
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_CycleWeapon(int32 WeaponIndex);
+	
+	UFUNCTION(Server, Reliable)
+	void Server_CycleWeapon(int32 WeaponIndex);
+	
+	void Local_CycleWeapon(int32 WeaponIndex);
 	
 	// Server RPC for letting server and other clients know when a client is aiming their weapon
 	UFUNCTION(Server, Reliable)
