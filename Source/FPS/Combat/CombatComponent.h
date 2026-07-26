@@ -8,6 +8,7 @@
 #include "CombatComponent.generated.h"
 
 
+class UAnimMontage;
 class UMaterialInstanceDynamic;
 class AWeapon;
 class UWeaponData;
@@ -43,6 +44,8 @@ public:
 	void Initiate_FireWeapon_Released();
 	void Initiate_Aim_Pressed();
 	void Initiate_Aim_Released();
+	
+	void Notify_CycleWeapon();
 	
 	UPROPERTY(BlueprintAssignable)
 	FOnReticleChanged OnReticleChanged;
@@ -87,6 +90,9 @@ public:
 protected:
 	UPROPERTY(EditDefaultsOnly, Category="FPS|Weapon")
 	float TraceLength;
+	
+	UFUNCTION()
+	void BlendOut_CycleWeapon(UAnimMontage* Montage, bool bInterrupted);
 	
 private:
 	// Authoritative map (updates only on the server)
