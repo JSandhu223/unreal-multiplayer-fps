@@ -161,13 +161,14 @@ void UCombatComponent::BlendOut_CycleWeapon(UAnimMontage* Montage, bool bInterru
 	
 	CurrentWeapon->WeaponStatus = EWeaponStatus::Idle;
 	
-	GEngine->AddOnScreenDebugMessage(
-		-1,
-		5.0f,
-		FColor::Yellow,
-		TEXT("BlendOut_CycleWeapon"),
-		false
-	);
+	OnReticleChanged.Broadcast(CurrentWeapon->GetReticleDynamicMaterialInstance(), CurrentWeapon->ReticleParams, bHitPlayer);
+	OnAmmoCounterChanged.Broadcast(CurrentWeapon->GetAmmoCounterDynamicMaterialInstance(), CurrentWeapon->Ammo, CurrentWeapon->MagCapacity);
+	OnCurrentReserveAmmoChanged.Broadcast(CurrentReserveAmmo, CurrentWeapon->Ammo, CurrentWeapon->WeaponIcon);
+	
+	if (bTriggerPressed && CurrentWeapon->FireType == EFireType::FullAuto && CurrentWeapon->Ammo > 0)
+	{
+		Local_FireWeapon();
+	}
 }
 
 void UCombatComponent::Initiate_ReloadWeapon()
@@ -181,9 +182,10 @@ void UCombatComponent::Initiate_FireWeapon_Pressed()
 	
 	bTriggerPressed = true;
 	
-	if (CurrentWeapon->Ammo > 0)
+	if (CurrentWeapon->WeaponStatus == EWeaponStatus::Idle && CurrentWeapon->Ammo > 0)
 	{
 		Local_FireWeapon();
+		
 	}
 	else
 	{
