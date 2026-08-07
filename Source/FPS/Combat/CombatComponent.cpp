@@ -196,8 +196,9 @@ void UCombatComponent::Initiate_FireWeapon_Pressed()
 void UCombatComponent::Local_FireWeapon()
 {
 	if (!IsValid(CurrentWeapon)) { return; }
-	
 	ensure(IsValid(WeaponData));
+	
+	CurrentWeapon->WeaponStatus = EWeaponStatus::Firing;
 	
 	// play the fire weapon montage for the first person mesh
 	UAnimMontage* Montage1P = WeaponData->FirstPersonMontages.FindChecked(CurrentWeapon->WeaponType).FireMontage;
@@ -226,6 +227,11 @@ void UCombatComponent::FireTimerFinished()
 {
 	if (!IsValid(CurrentWeapon)) { return; }
 	
+	if (CurrentWeapon->WeaponStatus == EWeaponStatus::Firing)
+	{
+		CurrentWeapon->WeaponStatus = EWeaponStatus::Idle;
+	}
+	
 	if (bTriggerPressed && CurrentWeapon->FireType == EFireType::FullAuto)
 	{
 		if (CurrentWeapon->Ammo > 0)
@@ -238,6 +244,9 @@ void UCombatComponent::FireTimerFinished()
 void UCombatComponent::Server_FireWeapon_Implementation(const FHitResult& Hit)
 {
 	if (!IsValid(CurrentWeapon)) { return; }
+	
+	// Server-side validation
+	if (CurrentWeapon->Ammo <= 0) { return; }
 	
 	APawn* OwningPawn = Cast<APawn>(GetOwner());
 	if (GetNetMode() != ENetMode::NM_ListenServer || !OwningPawn->IsLocallyControlled())
