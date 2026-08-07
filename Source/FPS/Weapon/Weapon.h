@@ -16,6 +16,17 @@ enum class EFireType : uint8
 	SemiAuto UMETA(DisplayName="Semi Automatic")
 };
 
+UENUM()
+enum EWeaponStatus : uint8
+{
+	Idle, /* (or Equipped). Weapon doing nothing, can fire/reload/cycle */
+	Firing, /* Currently firing, cannot reload/cycle */
+	Reloading, /* Currently reloading, cannot fire/cycle */
+	Cycling, /* Currently cycling to next weapon, cannot fire/reload/cycle */
+	Unequipped /* Weapon exists in player inventory but is not the CurrentWeapon, cannot perform any action on it */
+};
+
+
 UCLASS()
 class FPS_API AWeapon : public AActor
 {
@@ -24,20 +35,22 @@ class FPS_API AWeapon : public AActor
 public:
 	AWeapon();
 	
-	virtual void OnRep_Instigator() override;
-	
 	USkeletalMeshComponent* GetMesh1P() const;
 	USkeletalMeshComponent* GetMesh3P() const;
 	
 	UMaterialInstanceDynamic* GetReticleDynamicMaterialInstance();
 	UMaterialInstanceDynamic* GetAmmoCounterDynamicMaterialInstance();
 	
-	void AttachToOwningPawn() const;
+	void AttachToOwningPawn(APawn* Pawn) const;
+	
+	void DetachFromOwningPawn();
 	
 	void WeaponTrace(FHitResult& OutHit, float TraceLength);
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="FPS|Weapon Type")
 	FGameplayTag WeaponType;
+	
+	EWeaponStatus WeaponStatus;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="FPS|Fire Type")
 	EFireType FireType;
@@ -47,6 +60,9 @@ public:
 	
 	UPROPERTY(EditDefaultsOnly, Category="FPS|Reticle")
 	FReticleParams ReticleParams;
+	
+	UPROPERTY(EditDefaultsOnly, Category="FPS|Icon")
+	TObjectPtr<UMaterialInterface> WeaponIcon;
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="FPS|Aiming")
 	float AimFieldOfView;
