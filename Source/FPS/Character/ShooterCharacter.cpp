@@ -286,6 +286,14 @@ void AShooterCharacter::Notify_ReloadWeapon_Implementation()
 	Combat->Notify_ReloadWeapon();
 }
 
+void AShooterCharacter::AddAmmo_Implementation(const FGameplayTag& WeaponType, int32 AmmoAmount)
+{
+	if (HasAuthority() && IsValid(Combat))
+	{
+		Combat->AddAmmo(WeaponType, AmmoAmount);
+	}
+}
+
 FRotator AShooterCharacter::GetFixedAimRotation() const
 {
 	FRotator AimRotation = GetBaseAimRotation();
