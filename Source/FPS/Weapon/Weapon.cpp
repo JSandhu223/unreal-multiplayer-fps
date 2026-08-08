@@ -175,8 +175,7 @@ void AWeapon::WeaponTrace(FHitResult& OutHit, float TraceLength)
 	}
 }
 
-void AWeapon::Local_Fire(const FVector& ImpactPoint, const FVector& ImpactNormal,
-	TEnumAsByte<EPhysicalSurface> ImpactSurfaceType, bool bIsFirstPerson)
+void AWeapon::Local_Fire(const FVector& ImpactPoint, const FVector& ImpactNormal, TEnumAsByte<EPhysicalSurface> ImpactSurfaceType, bool bIsFirstPerson)
 {
 	bool bEnabledDebugDraw = CVarWeaponTraceDebugDrawing.GetValueOnGameThread();
 	if (bEnabledDebugDraw)
@@ -190,7 +189,10 @@ void AWeapon::Local_Fire(const FVector& ImpactPoint, const FVector& ImpactNormal
 	if (GetInstigator()->IsLocallyControlled())
 	{
 		Ammo = FMath::Clamp(Ammo - 1, 0, MagCapacity);
-		Sequence += 1;
+		if (!GetInstigator()->HasAuthority())
+		{
+			Sequence += 1;
+		}
 	}
 }
 
@@ -204,7 +206,7 @@ void AWeapon::AuthFire()
 void AWeapon::Rep_Fire(int32 AuthAmmo)
 {
 	// Executed only on client-side
-	if (GetInstigator()->IsLocallyControlled())
+	if (GetInstigator()->IsLocallyControlled() && !GetInstigator()->HasAuthority())
 	{
 		Ammo = AuthAmmo;
 		Sequence -= 1;
