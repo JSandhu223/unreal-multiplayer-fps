@@ -150,6 +150,69 @@ void UCombatComponent::Notify_CycleWeapon()
 	}
 }
 
+void UCombatComponent::Notify_ReloadWeapon()
+{
+	if (!IsValid(CurrentWeapon)) { return; }
+	
+	// Check if standalone, dedicated server, or listen server
+	if (GetNetMode() < ENetMode::NM_Client)
+	{
+		const int32 EmptySpace = CurrentWeapon->MagCapacity - CurrentWeapon->Ammo;
+		const int32 AmountToRefill = FMath::Min(EmptySpace, CurrentReserveAmmo);
+		CurrentWeapon->Ammo += AmountToRefill;
+		ReserveAmmo[CurrentWeapon->WeaponType] = ReserveAmmo[CurrentWeapon->WeaponType] - AmountToRefill;
+		CurrentReserveAmmo = ReserveAmmo[CurrentWeapon->WeaponType];
+		
+		Client_ReloadWeapon(CurrentWeapon->Ammo, CurrentReserveAmmo);
+	}
+	CurrentWeapon->WeaponStatus = EWeaponStatus::Idle;
+	
+	if (bTriggerPressed && CurrentWeapon->Ammo > 0)
+	{
+		Local_FireWeapon();
+	}
+}
+
+void UCombatComponent::AddAmmo(const FGameplayTag& WeaponType, int32 AmmoAmount)
+{
+	if (!GetOwner()->HasAuthority() && !IsValid(CurrentWeapon)) { return; }
+	
+	if (!ReserveAmmo.Contains(WeaponType))
+	{
+		ReserveAmmo.Add(WeaponType, AmmoAmount);
+	}
+	
+	const int32 NewAmmo = ReserveAmmo.FindChecked(WeaponType) + AmmoAmount;
+	ReserveAmmo[WeaponType] = NewAmmo;
+	
+	if (CurrentWeapon->WeaponType.MatchesTagExact(WeaponType))
+	{
+		CurrentReserveAmmo = NewAmmo;
+		if (CurrentWeapon->Ammo == 0 && NewAmmo > 0)
+		{
+			Server_ReloadWeapon();
+		}
+		
+		OnAmmoCounterChanged.Broadcast(CurrentWeapon->GetAmmoCounterDynamicMaterialInstance(), CurrentWeapon->Ammo, CurrentWeapon->MagCapacity);
+		OnCurrentReserveAmmoChanged.Broadcast(CurrentReserveAmmo, CurrentWeapon->Ammo, CurrentWeapon->WeaponIcon);
+	}
+}
+
+void UCombatComponent::Client_ReloadWeapon_Implementation(int32 NewWeaponAmmo, int32 NewCarriedAmmo)
+{
+	APawn* OwningPawn = Cast<APawn>(GetOwner());
+	if (!IsValid(CurrentWeapon) || !IsValid(OwningPawn)) { return; }
+	
+	if (OwningPawn->IsLocallyControlled())
+	{
+		CurrentWeapon->Ammo = NewWeaponAmmo;
+		CurrentReserveAmmo = NewCarriedAmmo;
+		
+		OnAmmoCounterChanged.Broadcast(CurrentWeapon->GetAmmoCounterDynamicMaterialInstance(), CurrentWeapon->Ammo, CurrentWeapon->MagCapacity);
+		OnCurrentReserveAmmoChanged.Broadcast(CurrentReserveAmmo, CurrentWeapon->Ammo, CurrentWeapon->WeaponIcon);
+	}
+}
+
 void UCombatComponent::BlendOut_CycleWeapon(UAnimMontage* Montage, bool bInterrupted)
 {
 	UAnimInstance* AnimInstance = IPlayerInterface::Execute_GetMesh1P(GetOwner())->GetAnimInstance();
@@ -173,7 +236,53 @@ void UCombatComponent::BlendOut_CycleWeapon(UAnimMontage* Montage, bool bInterru
 
 void UCombatComponent::Initiate_ReloadWeapon()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Cyan, TEXT("Initiate_ReloadWeapon"), false);
+	if (!IsValid(CurrentWeapon)) { return; }
+	if (CurrentWeapon->WeaponStatus == EWeaponStatus::Cycling || CurrentWeapon->WeaponStatus == EWeaponStatus::Reloading) { return; }
+	
+	// Prevent reloading if weapon magazine is full
+	if (CurrentWeapon->Ammo == CurrentWeapon->MagCapacity) { return; }
+	
+	// Check reserve ammo, preventing reloading if ammo is completely gone
+	if (CurrentReserveAmmo == 0) { return; }
+	
+	Local_ReloadWeapon();
+	Server_ReloadWeapon();
+}
+
+void UCombatComponent::Local_ReloadWeapon()
+{
+	APawn* OwningPawn = CastChecked<APawn>(GetOwner());
+	if (!IsValid(CurrentWeapon) || !IsValid(OwningPawn)) { return; }
+	ensure(WeaponData);
+
+	const bool bIsLocal = OwningPawn->IsLocallyControlled();
+	UAnimMontage* ReloadMontage = bIsLocal ?
+		WeaponData->FirstPersonMontages.FindChecked(CurrentWeapon->WeaponType).ReloadMontage :
+		WeaponData->ThirdPersonMontages.FindChecked(CurrentWeapon->WeaponType).ReloadMontage;
+	USkeletalMeshComponent* Mesh = bIsLocal ? IPlayerInterface::Execute_GetMesh1P(OwningPawn) : IPlayerInterface::Execute_GetMesh3P(OwningPawn);
+	if (IsValid(ReloadMontage) && IsValid(Mesh))
+	{
+		Mesh->GetAnimInstance()->Montage_Play(ReloadMontage);
+	}
+	
+	UAnimMontage* WeaponReloadMontage = WeaponData->WeaponMontages.FindChecked(CurrentWeapon->WeaponType).ReloadMontage;
+	USkeletalMeshComponent* WeaponMesh = bIsLocal ? CurrentWeapon->GetMesh1P() : CurrentWeapon->GetMesh3P();
+	if (IsValid(WeaponReloadMontage) && IsValid(WeaponMesh))
+	{
+		WeaponMesh->GetAnimInstance()->Montage_Play(WeaponReloadMontage);
+	}
+	
+	CurrentWeapon->WeaponStatus = EWeaponStatus::Reloading;
+}
+
+void UCombatComponent::Server_ReloadWeapon_Implementation()
+{
+	Multicast_ReloadWeapon();
+}
+
+void UCombatComponent::Multicast_ReloadWeapon_Implementation()
+{
+	Local_ReloadWeapon();
 }
 
 void UCombatComponent::Initiate_FireWeapon_Pressed()
@@ -196,8 +305,9 @@ void UCombatComponent::Initiate_FireWeapon_Pressed()
 void UCombatComponent::Local_FireWeapon()
 {
 	if (!IsValid(CurrentWeapon)) { return; }
-	
 	ensure(IsValid(WeaponData));
+	
+	CurrentWeapon->WeaponStatus = EWeaponStatus::Firing;
 	
 	// play the fire weapon montage for the first person mesh
 	UAnimMontage* Montage1P = WeaponData->FirstPersonMontages.FindChecked(CurrentWeapon->WeaponType).FireMontage;
@@ -224,7 +334,22 @@ void UCombatComponent::Local_FireWeapon()
 
 void UCombatComponent::FireTimerFinished()
 {
-	if (!IsValid(CurrentWeapon)) { return; }
+	APawn* OwningPawn = Cast<APawn>(GetOwner());
+	
+	if (!IsValid(CurrentWeapon) || !IsValid(OwningPawn)) { return; }
+	
+	// Auto reload weapon if current mag is empty and there is still reserve ammo
+	if (CurrentWeapon->Ammo == 0 && CurrentReserveAmmo > 0 && OwningPawn->IsLocallyControlled())
+	{
+		Local_ReloadWeapon();
+		Server_ReloadWeapon();
+		return;
+	}
+	
+	if (CurrentWeapon->WeaponStatus == EWeaponStatus::Firing)
+	{
+		CurrentWeapon->WeaponStatus = EWeaponStatus::Idle;
+	}
 	
 	if (bTriggerPressed && CurrentWeapon->FireType == EFireType::FullAuto)
 	{
@@ -238,6 +363,9 @@ void UCombatComponent::FireTimerFinished()
 void UCombatComponent::Server_FireWeapon_Implementation(const FHitResult& Hit)
 {
 	if (!IsValid(CurrentWeapon)) { return; }
+	
+	// Server-side validation
+	if (CurrentWeapon->Ammo <= 0) { return; }
 	
 	APawn* OwningPawn = Cast<APawn>(GetOwner());
 	if (GetNetMode() != ENetMode::NM_ListenServer || !OwningPawn->IsLocallyControlled())
@@ -359,14 +487,25 @@ void UCombatComponent::SetCurrentWeapon(AWeapon* NewWeapon, AWeapon* LastWeapon)
 		LocalLastWeapon->WeaponStatus = EWeaponStatus::Unequipped;
 	}
 	
+	if (!IsValid(CurrentWeapon)) { return; }
+	
 	CurrentWeapon = NewWeapon;
+	
 	APawn* OwningPawn = Cast<APawn>(GetOwner());
-	if (IsValid(OwningPawn) && OwningPawn->HasAuthority() && IsValid(CurrentWeapon))
+	if (!IsValid(OwningPawn)) { return; }
+	
+	if (OwningPawn->HasAuthority() && IsValid(CurrentWeapon))
 	{
 		CurrentReserveAmmo = ReserveAmmo.FindChecked(CurrentWeapon->WeaponType);
 	}
 	
 	CurrentWeapon->AttachToOwningPawn(OwningPawn);
+	
+	if (CurrentWeapon->Ammo == 0 && CurrentReserveAmmo > 0 && OwningPawn->IsLocallyControlled())
+	{
+		Local_ReloadWeapon();
+		Server_ReloadWeapon();
+	}
 }
 
 void UCombatComponent::SpawnInventory()

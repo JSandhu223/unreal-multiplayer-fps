@@ -46,6 +46,9 @@ public:
 	void Initiate_Aim_Released();
 	
 	void Notify_CycleWeapon();
+	void Notify_ReloadWeapon();
+	
+	void AddAmmo(const FGameplayTag& WeaponType, int32 AmmoAmount);
 	
 	UPROPERTY(BlueprintAssignable)
 	FOnReticleChanged OnReticleChanged;
@@ -151,4 +154,15 @@ private:
 	void Server_FireWeapon(const FHitResult& Hit);
 	
 	void Local_FireWeapon();
+	
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_ReloadWeapon();
+	
+	UFUNCTION(Server, Reliable)
+	void Server_ReloadWeapon();
+	
+	UFUNCTION(Client, Reliable)
+	void Client_ReloadWeapon(int32 NewWeaponAmmo, int32 NewCarriedAmmo);
+	
+	void Local_ReloadWeapon();
 };
