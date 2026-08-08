@@ -46,6 +46,7 @@ public:
 	void Initiate_Aim_Released();
 	
 	void Notify_CycleWeapon();
+	void Notify_ReloadWeapon();
 	
 	UPROPERTY(BlueprintAssignable)
 	FOnReticleChanged OnReticleChanged;
@@ -153,10 +154,13 @@ private:
 	void Local_FireWeapon();
 	
 	UFUNCTION(NetMulticast, Reliable)
-	void Multicast_ReloadWeapon(int32 NewWeaponAmmo, int32 NewCarriedAmmo);
+	void Multicast_ReloadWeapon();
 	
 	UFUNCTION(Server, Reliable)
 	void Server_ReloadWeapon();
+	
+	UFUNCTION(Client, Reliable)
+	void Client_ReloadWeapon(int32 NewWeaponAmmo, int32 NewCarriedAmmo);
 	
 	void Local_ReloadWeapon();
 };

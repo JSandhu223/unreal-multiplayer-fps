@@ -281,6 +281,11 @@ void AShooterCharacter::Notify_CycleWeapon_Implementation()
 	Combat->Notify_CycleWeapon();
 }
 
+void AShooterCharacter::Notify_ReloadWeapon_Implementation()
+{
+	Combat->Notify_ReloadWeapon();
+}
+
 FRotator AShooterCharacter::GetFixedAimRotation() const
 {
 	FRotator AimRotation = GetBaseAimRotation();
