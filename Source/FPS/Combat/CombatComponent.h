@@ -151,4 +151,12 @@ private:
 	void Server_FireWeapon(const FHitResult& Hit);
 	
 	void Local_FireWeapon();
+	
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_ReloadWeapon(int32 NewWeaponAmmo, int32 NewCarriedAmmo);
+	
+	UFUNCTION(Server, Reliable)
+	void Server_ReloadWeapon();
+	
+	void Local_ReloadWeapon();
 };
