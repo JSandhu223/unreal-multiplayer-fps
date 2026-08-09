@@ -1,6 +1,7 @@
 #include "ShooterCharacter.h"
 
 #include "EnhancedInputComponent.h"
+#include "Animation/AnimInstance.h"
 #include "Camera/CameraComponent.h"
 #include "Combat/CombatComponent.h"
 #include "Components/SkeletalMeshComponent.h"
@@ -296,9 +297,24 @@ void AShooterCharacter::AddAmmo_Implementation(const FGameplayTag& WeaponType, i
 bool AShooterCharacter::DoDamage_Implementation(float DamageAmount, AActor* DamageInstigator)
 {
 	// Change Health by DamageAmount
-	// Play a hit react montage (also multicast hit react)
+	
 	// Calculate lethality of damage
+	
+	const int32 MontageSelection = FMath::RandRange(0, HitReacts.Num() - 1);
+	Multicast_HitReact(MontageSelection);
+	
 	return false;
+}
+
+void AShooterCharacter::Multicast_HitReact_Implementation(int32 MontageIndex)
+{
+	if (GetNetMode() != ENetMode::NM_DedicatedServer && !IsLocallyControlled())
+	{
+		if (HitReacts.IsValidIndex(MontageIndex))
+		{
+			GetMesh()->GetAnimInstance()->Montage_Play(HitReacts[MontageIndex]);
+		}
+	}
 }
 
 FRotator AShooterCharacter::GetFixedAimRotation() const

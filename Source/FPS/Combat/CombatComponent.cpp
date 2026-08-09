@@ -367,6 +367,11 @@ void UCombatComponent::Server_FireWeapon_Implementation(const FHitResult& Hit)
 	// Server-side validation
 	if (CurrentWeapon->Ammo <= 0) { return; }
 	
+	if (IsValid(Hit.GetActor()) && Hit.GetActor()->Implements<UPlayerInterface>())
+	{
+		IPlayerInterface::Execute_DoDamage(Hit.GetActor(), 0.0f, GetOwner());
+	}
+	
 	APawn* OwningPawn = Cast<APawn>(GetOwner());
 	if (GetNetMode() != ENetMode::NM_ListenServer || !OwningPawn->IsLocallyControlled())
 	{

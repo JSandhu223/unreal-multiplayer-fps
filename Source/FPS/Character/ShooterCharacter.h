@@ -48,6 +48,12 @@ public:
 	virtual void AddAmmo_Implementation(const FGameplayTag& WeaponType, int32 AmmoAmount) override;
 	virtual bool DoDamage_Implementation(float DamageAmount, AActor* DamageInstigator) override;
 	
+	UPROPERTY(EditDefaultsOnly, Category="FPS|Hit React")
+	TArray<TObjectPtr<UAnimMontage>> HitReacts;
+	
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_HitReact(int32 MontageIndex);
+	
 	// Fixes the pitch by mapping the range [270, 360] to [-90, 0].
 	UFUNCTION(BlueprintCallable)
 	FRotator GetFixedAimRotation() const;
