@@ -7,6 +7,7 @@
 #include "ShooterCharacter.generated.h"
 
 
+class UHealthComponent;
 class UInputAction;
 class UCombatComponent;
 class USpringArmComponent;
@@ -73,6 +74,9 @@ public:
 	bool HasWeaponFirstReplicated() const { return bWeaponFirstReplicated; }
 	
 protected:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="FPS|Health")
+	TObjectPtr<UHealthComponent> Health;
+	
 	// First person arms
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<USkeletalMeshComponent> Mesh1P;

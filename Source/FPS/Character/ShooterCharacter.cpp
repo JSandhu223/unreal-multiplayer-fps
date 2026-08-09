@@ -8,6 +8,7 @@
 #include "Data/WeaponData.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Health/HealthComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Weapon/Weapon.h"
 
@@ -29,6 +30,9 @@ AShooterCharacter::AShooterCharacter()
 	
 	Combat = CreateDefaultSubobject<UCombatComponent>(TEXT("Combat"));
 	Combat->SetIsReplicated(true);
+	
+	Health = CreateDefaultSubobject<UHealthComponent>(TEXT("Health"));
+	Health->SetIsReplicated(true);
 	
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
 	SpringArm->SetupAttachment(RootComponent);
