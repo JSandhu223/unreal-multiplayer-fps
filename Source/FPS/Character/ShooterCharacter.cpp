@@ -293,6 +293,13 @@ void AShooterCharacter::AddAmmo_Implementation(const FGameplayTag& WeaponType, i
 		Combat->AddAmmo(WeaponType, AmmoAmount);
 	}
 }
+bool AShooterCharacter::DoDamage_Implementation(float DamageAmount, AActor* DamageInstigator)
+{
+	// Change Health by DamageAmount
+	// Play a hit react montage (also multicast hit react)
+	// Calculate lethality of damage
+	return false;
+}
 
 FRotator AShooterCharacter::GetFixedAimRotation() const
 {

@@ -46,6 +46,7 @@ public:
 	virtual void Notify_CycleWeapon_Implementation() override;
 	virtual void Notify_ReloadWeapon_Implementation() override;
 	virtual void AddAmmo_Implementation(const FGameplayTag& WeaponType, int32 AmmoAmount) override;
+	virtual bool DoDamage_Implementation(float DamageAmount, AActor* DamageInstigator) override;
 	
 	// Fixes the pitch by mapping the range [270, 360] to [-90, 0].
 	UFUNCTION(BlueprintCallable)
