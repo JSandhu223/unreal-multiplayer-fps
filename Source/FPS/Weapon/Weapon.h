@@ -58,6 +58,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="FPS|Fire Type")
 	float FireTime;
 	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="FPS|Damage")
+	float Damage;
+	
 	UPROPERTY(EditDefaultsOnly, Category="FPS|Reticle")
 	FReticleParams ReticleParams;
 	

@@ -11,6 +11,7 @@
 AShooterPlayerController::AShooterPlayerController()
 {
 	bReplicates = true;
+	bPawnAlive = true;
 }
 
 void AShooterPlayerController::BeginPlay()
@@ -54,6 +55,8 @@ void AShooterPlayerController::SetupInputComponent()
 
 void AShooterPlayerController::Input_Move(const FInputActionValue& InputActionValue)
 {
+	if (!bPawnAlive) { return; }
+	
 	const FVector2D InputAxisVector = InputActionValue.Get<FVector2D>();
 	
 	const FRotator Rotation = GetControlRotation();
@@ -68,6 +71,8 @@ void AShooterPlayerController::Input_Move(const FInputActionValue& InputActionVa
 
 void AShooterPlayerController::Input_Look(const FInputActionValue& InputActionValue)
 {
+	if (!bPawnAlive) { return; }
+	
 	const FVector2D InputAxisVector = InputActionValue.Get<FVector2D>();
 	
 	AddPitchInput(InputAxisVector.Y); // looking up and down
@@ -76,10 +81,9 @@ void AShooterPlayerController::Input_Look(const FInputActionValue& InputActionVa
 
 void AShooterPlayerController::Input_Crouch()
 {
-	if (!IsValid(GetCharacter()))
-	{
-		return;
-	}
+	if (!IsValid(GetCharacter())) { return; }
+	
+	if (!bPawnAlive) { return; }
 	
 	if (UCharacterMovementComponent* MovementComp = GetCharacter()->GetCharacterMovement())
 	{
@@ -89,10 +93,9 @@ void AShooterPlayerController::Input_Crouch()
 
 void AShooterPlayerController::Input_Jump()
 {
-	if (!IsValid(GetCharacter()))
-	{
-		return;
-	}
+	if (!IsValid(GetCharacter())) { return; }
+	
+	if (!bPawnAlive) { return; }
 	
 	UCharacterMovementComponent* MovementComp = GetCharacter()->GetCharacterMovement();
 	if (!IsValid(MovementComp))

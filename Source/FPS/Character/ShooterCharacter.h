@@ -7,6 +7,7 @@
 #include "ShooterCharacter.generated.h"
 
 
+class UHealthComponent;
 class UInputAction;
 class UCombatComponent;
 class USpringArmComponent;
@@ -46,6 +47,13 @@ public:
 	virtual void Notify_CycleWeapon_Implementation() override;
 	virtual void Notify_ReloadWeapon_Implementation() override;
 	virtual void AddAmmo_Implementation(const FGameplayTag& WeaponType, int32 AmmoAmount) override;
+	virtual bool DoDamage_Implementation(float DamageAmount, AActor* DamageInstigator) override;
+	
+	UPROPERTY(EditDefaultsOnly, Category="FPS|Hit React")
+	TArray<TObjectPtr<UAnimMontage>> HitReacts;
+	
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_HitReact(int32 MontageIndex);
 	
 	// Fixes the pitch by mapping the range [270, 360] to [-90, 0].
 	UFUNCTION(BlueprintCallable)
@@ -67,8 +75,11 @@ public:
 	
 protected:
 	// First person arms
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="FPS|Mesh")
 	TObjectPtr<USkeletalMeshComponent> Mesh1P;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="FPS|Health")
+	TObjectPtr<UHealthComponent> Health;
 	
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<USpringArmComponent> SpringArm;
@@ -84,6 +95,15 @@ protected:
 	
 	UFUNCTION(BlueprintImplementableEvent)
 	void OnAim(bool bIsAiming);
+	
+	UFUNCTION()
+	void OnDeathStarted();
+	
+	UFUNCTION(BlueprintImplementableEvent)
+	void DeathEffects();
+	
+	UPROPERTY(EditDefaultsOnly, Category="FPS|Respawn")
+	float RespawnTime;
 	
 private:
 	void CalculateFABRIKSocketTransform();
@@ -112,6 +132,10 @@ protected:
 	float MovementOffsetYaw;
 	
 private:
+	FTimerHandle DeathTimer;
+	
+	void DeathTimerFinished();
+	
 	UPROPERTY(EditDefaultsOnly, Category="FPS|Input")
 	TObjectPtr<UInputAction> CycleWeaponAction;
 	
