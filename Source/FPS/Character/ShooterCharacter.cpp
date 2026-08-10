@@ -234,6 +234,11 @@ void AShooterCharacter::TurnInPlace(float DeltaTime)
 
 void AShooterCharacter::OnDeathStarted()
 {
+	if (HasAuthority())
+	{
+		Combat->DestroyInventory();
+	}
+	
 	// Disable input on machines that have a valid controller (a dedicated server doesn't have a player)
 	if (GetNetMode() != ENetMode::NM_DedicatedServer)
 	{

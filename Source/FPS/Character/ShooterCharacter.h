@@ -74,12 +74,12 @@ public:
 	bool HasWeaponFirstReplicated() const { return bWeaponFirstReplicated; }
 	
 protected:
+	// First person arms
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="FPS|Mesh")
+	TObjectPtr<USkeletalMeshComponent> Mesh1P;
+	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="FPS|Health")
 	TObjectPtr<UHealthComponent> Health;
-	
-	// First person arms
-	UPROPERTY(VisibleAnywhere)
-	TObjectPtr<USkeletalMeshComponent> Mesh1P;
 	
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<USpringArmComponent> SpringArm;
