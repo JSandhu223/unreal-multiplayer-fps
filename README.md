@@ -20,6 +20,15 @@ Developed with Unreal Engine 5.8
 - Implements the `PlayerInterface`.
 - Handles turn in place calculations in `Tick()`.
 
+### HealthComponent
+
+- Stores the `Health` and `MaxHealth`.
+- Stores an enum `DeathState`.
+- Defines and broadcasts the following delegates:
+  - `OnHealthChanged` broadcasts when the `Health` changes, such as when damage is applied to the owning `ShooterCharacter`.
+  - `OnMaxHealthChanged` broadcasts whenever the `MaxHealth` updates. Use cases for this could be the player leveling up or picking up a consumable that temporarily applies a health buff.
+  - `OnDeathStarted` broadcasts when the `Health` reaches 0 or below.
+
 ### CombatComponent
 
 - Handles logic after the `ShooterCharacter` performs a weapon action.
@@ -40,7 +49,8 @@ Developed with Unreal Engine 5.8
 
 ### BP_Weapon
 
-- The master blueprint for all weapons. Derives from the c++ `Weapon` class.
+- The master blueprint for all weapons.
+- Derives from the c++ `Weapon` class. Specific weapons such as Pistol and Rifle are derived from this blueprint class.
 - Handles weapon effects such as firing effects, bullets impacts, decals, sounds, and animation montages.
 
 ### WeaponData
@@ -116,6 +126,7 @@ Developed with Unreal Engine 5.8
 ## UI
 
 - The main overlay for our game is `WBP_ShooterOverlay` and houses all other widgets in its canvas. It is created and added to the viewport by the `ShooterPlayerController`.
+  - Houses the `W_HealthBar` widget from the Common UI plugin and binds to delegates defined in the `HealthComponent`.
 - `Weapon` holds fields needed by the main overlay.
   - Has field `FReticleParams` for holding the reticle parameters. These parameters assist in dynamically adjusting the reticle during gameplay.
   - Has fields `ReticleMaterial` and `AmmoCounterMaterial`. These are set in each respective weapon blueprint.

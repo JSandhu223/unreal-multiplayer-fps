@@ -354,8 +354,6 @@ bool AShooterCharacter::DoDamage_Implementation(float DamageAmount, AActor* Dama
 	
 	Health->ChangeHealthByAmount(-DamageAmount, DamageInstigator);
 	
-	// Calculate lethality of damage
-	
 	const int32 MontageSelection = FMath::RandRange(0, HitReacts.Num() - 1);
 	Multicast_HitReact(MontageSelection);
 	
