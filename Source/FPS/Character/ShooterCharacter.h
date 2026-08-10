@@ -102,6 +102,9 @@ protected:
 	UFUNCTION(BlueprintImplementableEvent)
 	void DeathEffects();
 	
+	UPROPERTY(EditDefaultsOnly, Category="FPS|Respawn")
+	float RespawnTime;
+	
 private:
 	void CalculateFABRIKSocketTransform();
 	
@@ -129,6 +132,10 @@ protected:
 	float MovementOffsetYaw;
 	
 private:
+	FTimerHandle DeathTimer;
+	
+	void DeathTimerFinished();
+	
 	UPROPERTY(EditDefaultsOnly, Category="FPS|Input")
 	TObjectPtr<UInputAction> CycleWeaponAction;
 	
