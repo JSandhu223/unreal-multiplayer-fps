@@ -10,6 +10,9 @@ UHealthComponent::UHealthComponent()
 	
 	DeathState = EDeathState::NotDead;
 	SetIsReplicatedByDefault(true);
+	
+	Health = 100.0f;
+	MaxHealth = 100.0f;
 }
 
 void UHealthComponent::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
