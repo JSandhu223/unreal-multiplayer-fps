@@ -7,6 +7,7 @@
 
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnHealthChanged, UHealthComponent*, HealthComponent, float, OldValue, float, NewValue, AActor*, Instigator);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDeathStarted);
 
 
 UENUM(BlueprintType)
@@ -55,6 +56,9 @@ public:
 	
 	UPROPERTY(BlueprintAssignable)
 	FOnHealthChanged OnMaxHealthChanged;
+	
+	UPROPERTY(BlueprintAssignable)
+	FOnDeathStarted OnDeathStarted;
 
 protected:
 	virtual void BeginPlay() override;
@@ -67,4 +71,7 @@ protected:
 	
 	UFUNCTION()
 	void OnRep_MaxHealth(float OldValue);
+	
+private:
+	void StartDeath();
 };
